@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+/dataset
+.DS_Store
+*.bin
