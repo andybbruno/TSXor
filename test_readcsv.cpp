@@ -24,6 +24,7 @@ int main()
         auto time = values[0];
         values.erase(values.begin());
         c = new Compressor(new DataPoint(time, values), std::string(s+".bin"));
+        // c = new Compressor(new DataPoint(time, values), std::string("RESULTS.bin"));
         // Decompressor("data.bin", 20);
     }
 

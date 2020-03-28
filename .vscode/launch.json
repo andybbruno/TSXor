@@ -9,13 +9,12 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["8" , "seed", "4"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "miDebuggerPath":"/Applications/Xcode_OLD.app/Contents/Developer/usr/bin/lldb-mi",
+            "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
             "preLaunchTask": "g++ build active file"
         }
     ]
