@@ -2,7 +2,9 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <math.h>
 #include <boost/dynamic_bitset.hpp>
+
 
 class Compressor
 {
@@ -15,7 +17,7 @@ class Compressor
 
     DataPoint *sec_last;
     DataPoint *last;
-    // DataPoint *curr;
+
 
 public:
     Compressor(DataPoint *head, std::string filename) : header(head)
@@ -81,18 +83,37 @@ public:
 
     boost::dynamic_bitset<> concatDynBitSet(const boost::dynamic_bitset<> &bs1, const boost::dynamic_bitset<> &bs2)
     {
-        boost::dynamic_bitset<> res = bs2;
+        auto s1 = bs1.size();
+        auto s2 = bs2.size();
 
-        for (int i = 0; i < bs1.size(); i++)
+        if ((s1 == 0) && (s2 == 0))
         {
-            bs1[i] == true ? res.push_back(true) : res.push_back(false);
+            throw "Both bitsets are empty";
         }
-        return res;
+
+        if (s1 == 0)
+        {
+            return bs2;
+        }
+        else if (s2 == 0)
+        {
+            return bs1;
+        }
+        else
+        {
+            boost::dynamic_bitset<> res = bs2;
+
+            for (int i = 0; i < s1; i++)
+            {
+                bs1[i] == true ? res.push_back(true) : res.push_back(false);
+            }
+            return res;
+        }
     }
 
-    std::vector<boost::dynamic_bitset<>> valuesToBits(DataPoint *curr, DataPoint *prev)
+    boost::dynamic_bitset<> valuesToBits(DataPoint *curr, DataPoint *prev)
     {
-        std::vector<boost::dynamic_bitset<>> result;
+        boost::dynamic_bitset<> res_bits;
 
         for (int i = 0; i < curr->values.size(); i++)
         {
@@ -103,17 +124,13 @@ public:
             uint64_t xored = *current ^ *past;
             curr->xorWithPrev[i] = xored;
 
-            // std::cout << std::bitset<64>(xored).to_string() << std::endl;
-
             if (xored == 0)
             {
                 res = boost::dynamic_bitset<>(1, 0);
             }
             else
             {
-                res.push_back(true);
-
-                // conta leading e traling zero
+                // count leading and traling zeros
                 uint64_t leadingZeros = __builtin_clzll(xored);
                 uint64_t trailingZeros = __builtin_ctzll(xored);
 
@@ -121,23 +138,23 @@ public:
                 uint64_t prevXorTrailingZeros = __builtin_ctzll(prev->xorWithPrev[i]);
 
                 uint64_t corePart = xored >> trailingZeros;
-                int coreLength = 64 - leadingZeros;
+                int coreLength = 64 - leadingZeros - trailingZeros;
 
                 if ((leadingZeros == prevXorLeadingZeros) && (trailingZeros == prevXorTrailingZeros))
                 {
-                    // control bit '0'
-                    auto controlBits = boost::dynamic_bitset<>(1, 0);
-                    res = concatDynBitSet(res, controlBits);
+                    // '1' + control bit '0'
+                    res.push_back(false);
+                    res.push_back(true);
                 }
                 else
                 {
-                    // control bit '1'
-                    auto controlBits = boost::dynamic_bitset<>(1, 1);
-                    res = concatDynBitSet(res, controlBits);
+                    // '1' + control bit '1'
+                    res.push_back(true);
+                    res.push_back(true);
 
                     //  5 bits for leading zeros
                     auto leadingZerosBits = boost::dynamic_bitset<>(5, leadingZeros);
-                    res = concatDynBitSet(controlBits, leadingZerosBits);
+                    res = concatDynBitSet(res, leadingZerosBits);
 
                     //  6 bits for the length of the core part of the XOR
                     auto coreLengthBits = boost::dynamic_bitset<>(6, coreLength);
@@ -148,9 +165,9 @@ public:
                 auto coreBits = boost::dynamic_bitset<>(coreLength, corePart);
                 res = concatDynBitSet(res, coreBits);
             }
-            result.push_back(res);
+            res_bits = concatDynBitSet(res_bits, res);
         }
-        return result;
+        return res_bits;
     }
 
     void compress(DataPoint *dp)
@@ -159,7 +176,7 @@ public:
         auto ts = dp->timestamp;
         boost::dynamic_bitset<> time;
         boost::dynamic_bitset<> sequence;
-
+        
         if (!HEADER)
             throw;
 
@@ -167,28 +184,34 @@ public:
         {
             auto delta = ts - header->timestamp;
             time = boost::dynamic_bitset<>(14, delta);
-            auto outbits = valuesToBits(dp, header);
-            FIRST_BLOCK = false;
-
-            // outfile.write((char *)&outbits, sizeof(outbits));
-
-            std::cout << sizeof(outbits) << std::endl;
-
+            
+            sequence = valuesToBits(dp, header);
+            
             sec_last = header;
             last = dp;
+            FIRST_BLOCK = false;
         }
         else
         {
             int64_t d = (ts - last->timestamp) - (last->timestamp - sec_last->timestamp);
             time = deltaToBits(d);
             
-            auto outbits = valuesToBits(dp, last);
-            std::cout << sizeof(outbits) << std::endl;
-
+            sequence = valuesToBits(dp, last);
+            
             sec_last = last;
             last = dp;
         }
 
+        auto final_bits = concatDynBitSet(time, sequence);
+
+        int num_b = final_bits.num_blocks();
+        boost::dynamic_bitset<>::block_type *blocks = new boost::dynamic_bitset<>::block_type[num_b];
+        boost::to_block_range(final_bits, blocks);
+        // outfile.write((char *)blocks, num_b * sizeof(*blocks));
+    }
+
+    void close()
+    {
         outfile.close();
     }
 };

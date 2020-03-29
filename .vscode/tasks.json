@@ -1,26 +1,36 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558 
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
     "tasks": [
         {
             "type": "shell",
-            "label": "g++ build active file",
+            "label": "g++ Decompression",
             "command": "/usr/bin/g++",
             "args": [
                 "-g",
-                "${file}",
+                "${workspaceFolder}/test_decompression.cpp",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}",
+                "${workspaceFolder}/test_decompression.o",
                 "-std=c++17"
             ],
             "options": {
                 "cwd": "/usr/bin"
-            },
-            "problemMatcher": [
-                "$gcc"
+            }
+        },
+
+        {
+            "type": "shell",
+            "label": "g++ Compression",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-g",
+                "${workspaceFolder}/test_compression.cpp",
+                "-o",
+                "${workspaceFolder}/test_compression.o",
+                "-std=c++17"
             ],
-            "group": "build"
+            "options": {
+                "cwd": "/usr/bin"
+            }
         }
-    ]
+    ],
+    "version": "2.0.0"
 }

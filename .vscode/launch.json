@@ -5,17 +5,33 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "g++ build and debug active file",
+            "name": "g++ decompression",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "program": "${workspaceFolder}/test_decompression.o",
+            "args": ["RES.bin"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
             "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
-            "preLaunchTask": "g++ build active file"
+            "preLaunchTask": "g++ Decompression"
+        },
+
+        {
+            "name": "g++ compression",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_compression.o",
+            "args": ["dataset/Bari_UTC_UNIX.csv", "RES.bin"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
+            "preLaunchTask": "g++ Compression"
         }
     ]
 }
