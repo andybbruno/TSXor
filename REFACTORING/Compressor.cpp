@@ -3,8 +3,6 @@
 #include <fstream>
 #include <iostream>
 #include <math.h>
-#include <boost/dynamic_bitset.hpp>
-
 
 class Compressor
 {
@@ -18,98 +16,121 @@ class Compressor
     DataPoint *sec_last;
     DataPoint *last;
 
-
 public:
     Compressor(DataPoint *head, std::string filename) : header(head)
     {
-        // outfile = std::fstream(filename, std::ios::out | std::ios::binary);
-        // if (!outfile)
-        // {
-        //     std::cerr << "Unable to open file" << std::endl;
-        //     exit(1); // terminate with error
-        // }
+        outfile = std::fstream(filename, std::ios::out | std::ios::binary);
+        if (!outfile)
+        {
+            std::cerr << "Unable to open file" << std::endl;
+            exit(1); // terminate with error
+        }
 
-        // //Try to write the header on the file
-        // try
-        // {
-        //     outfile.write((char *)&header, sizeof(DataPoint));
-        // }
-        // catch (const std::exception &e)
-        // {
-        //     std::cerr << e.what() << std::endl;
-        // }
+        //Try to write the header on the file
+        try
+        {
+            outfile.write((char *)&header, sizeof(DataPoint));
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
         HEADER = true;
     };
 
-    boost::dynamic_bitset<> deltaToBits(int64_t delta)
+    int64_t deltaEncoding(int64_t delta)
     {
-        boost::dynamic_bitset<> s;
-
         if (delta == 0)
         {
-            s = boost::dynamic_bitset<>(1, 0);
+
         }
         else if ((-63 < delta) && (delta < 64))
         {
-            s = boost::dynamic_bitset<>(7, delta);
-            s.push_back(false);
-            s.push_back(true);
+
         }
         else if ((-255 < delta) && (delta < 256))
         {
-            s = boost::dynamic_bitset<>(9, delta);
-            s.push_back(false);
-            s.push_back(true);
-            s.push_back(true);
+
         }
         else if ((-2047 < delta) && (delta < 2048))
         {
-            s = boost::dynamic_bitset<>(12, delta);
-            s.push_back(false);
-            s.push_back(true);
-            s.push_back(true);
-            s.push_back(true);
+
         }
         else
         {
-            s = boost::dynamic_bitset<>(32, delta);
-            s.push_back(true);
-            s.push_back(true);
-            s.push_back(true);
-            s.push_back(true);
-        }
-        return s;
-    }
-
-    boost::dynamic_bitset<> concatDynBitSet(const boost::dynamic_bitset<> &bs1, const boost::dynamic_bitset<> &bs2)
-    {
-        auto s1 = bs1.size();
-        auto s2 = bs2.size();
-
-        if ((s1 == 0) && (s2 == 0))
-        {
-            throw "Both bitsets are empty";
-        }
-
-        if (s1 == 0)
-        {
-            return bs2;
-        }
-        else if (s2 == 0)
-        {
-            return bs1;
-        }
-        else
-        {
-            boost::dynamic_bitset<> res = bs2;
-
-            for (int i = 0; i < s1; i++)
-            {
-                bs1[i] == true ? res.push_back(true) : res.push_back(false);
-            }
-            return res;
+            
         }
     }
+
+    // boost::dynamic_bitset<> deltaToBits(int64_t delta)
+    // {
+    //     boost::dynamic_bitset<> s;
+
+    //     if (delta == 0)
+    //     {
+    //         s = boost::dynamic_bitset<>(1, 0);
+    //     }
+    //     else if ((-63 < delta) && (delta < 64))
+    //     {
+    //         s = boost::dynamic_bitset<>(7, delta);
+    //         s.push_back(false);
+    //         s.push_back(true);
+    //     }
+    //     else if ((-255 < delta) && (delta < 256))
+    //     {
+    //         s = boost::dynamic_bitset<>(9, delta);
+    //         s.push_back(false);
+    //         s.push_back(true);
+    //         s.push_back(true);
+    //     }
+    //     else if ((-2047 < delta) && (delta < 2048))
+    //     {
+    //         s = boost::dynamic_bitset<>(12, delta);
+    //         s.push_back(false);
+    //         s.push_back(true);
+    //         s.push_back(true);
+    //         s.push_back(true);
+    //     }
+    //     else
+    //     {
+    //         s = boost::dynamic_bitset<>(32, delta);
+    //         s.push_back(true);
+    //         s.push_back(true);
+    //         s.push_back(true);
+    //         s.push_back(true);
+    //     }
+    //     return s;
+    // }
+
+    // boost::dynamic_bitset<> concatDynBitSet(const boost::dynamic_bitset<> &bs1, const boost::dynamic_bitset<> &bs2)
+    // {
+    //     auto s1 = bs1.size();
+    //     auto s2 = bs2.size();
+
+    //     if ((s1 == 0) && (s2 == 0))
+    //     {
+    //         throw "Both bitsets are empty";
+    //     }
+
+    //     if (s1 == 0)
+    //     {
+    //         return bs2;
+    //     }
+    //     else if (s2 == 0)
+    //     {
+    //         return bs1;
+    //     }
+    //     else
+    //     {
+    //         boost::dynamic_bitset<> res = bs2;
+
+    //         for (int i = 0; i < s1; i++)
+    //         {
+    //             bs1[i] == true ? res.push_back(true) : res.push_back(false);
+    //         }
+    //         return res;
+    //     }
+    // }
 
     boost::dynamic_bitset<> valuesToBits(DataPoint *curr, DataPoint *prev)
     {
@@ -170,13 +191,13 @@ public:
         return res_bits;
     }
 
-    void compress(DataPoint *dp)
+    void append(DataPoint *dp)
     {
         auto values = dp->values;
         auto ts = dp->timestamp;
         boost::dynamic_bitset<> time;
         boost::dynamic_bitset<> sequence;
-        
+
         if (!HEADER)
             throw;
 
@@ -184,9 +205,9 @@ public:
         {
             auto delta = ts - header->timestamp;
             time = boost::dynamic_bitset<>(14, delta);
-            
+
             // sequence = valuesToBits(dp, header);
-            
+
             sec_last = header;
             last = dp;
             FIRST_BLOCK = false;
@@ -195,9 +216,9 @@ public:
         {
             int64_t d = (ts - last->timestamp) - (last->timestamp - sec_last->timestamp);
             time = deltaToBits(d);
-            
+
             // sequence = valuesToBits(dp, last);
-            
+
             sec_last = last;
             last = dp;
         }

@@ -5,6 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "g++ build and debug active file",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
+            "preLaunchTask": "g++ build active file"
+        },
+        {
             "name": "g++ decompression",
             "type": "cppdbg",
             "request": "launch",
@@ -18,7 +32,6 @@
             "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
             "preLaunchTask": "g++ Decompression"
         },
-
         {
             "name": "g++ compression",
             "type": "cppdbg",
