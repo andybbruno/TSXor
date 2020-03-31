@@ -12,7 +12,7 @@ int main()
     // {
     //     stream.append(0, 65);
     // }
-    stream.append(0,65);
+    stream.append(11);
     // stream.append(5);
     // stream.append(4);
     // stream.append(0);

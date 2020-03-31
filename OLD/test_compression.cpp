@@ -9,8 +9,7 @@ int numLines = 0;
 
 int main(int argc, char *argv[])
 {
-    auto start = std::chrono::system_clock::now();
-    std::string filename = argv[1]; // "dataset/test.csv"
+    std::string filename = argv[1];     // "dataset/test.csv"
     std::string out_filename = argv[2]; // "RES.bin"
 
     CSVReader reader(filename);
@@ -31,35 +30,38 @@ int main(int argc, char *argv[])
         // Decompressor("data.bin", 20);
     }
 
+    std::vector<std::vector<double>> lines;
     while (!reader.isEmpty())
     {
-        std::vector<double> values = reader.nextLine();
+        lines.push_back(reader.nextLine());
         numLines++;
-        auto time = values[0];
-        values.erase(values.begin());
-        c->compress(new DataPoint(time, values));
     }
 
-    c->close();
+    auto start = std::chrono::system_clock::now();
+    for (auto val : lines)
+    {
+        auto time = val[0];
+        val.erase(val.begin());
+        c->compress(new DataPoint(time, val));
+    }
 
-    uintmax_t original_filesize;
-    uintmax_t compressed_filesize;
-
-    original_filesize = std::filesystem::file_size(filename);
-    compressed_filesize = std::filesystem::file_size(out_filename);
+    auto compr_bits = c->numbits;
 
     auto end = std::chrono::system_clock::now();
     auto elapsed = end - start;
     auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+    auto num_points = numLines * DataPoint::num_cols;
+    // 8 bytes per point (double)
+    auto estimated_original_size = 8 * num_points;
+    auto estimated_compressed_size = compr_bits / 8;
+    auto compr_ratio = ((double)estimated_original_size / (estimated_compressed_size));
 
     std::cout.precision(3);
     std::cout << std::fixed;
     std::cout << "Computed in: " << msec << " msec" << std::endl;
-    std::cout << "Throughput: " << ((double)numLines / msec * 1000) << " DataPoint/s" << std::endl;
-
-    // std::cout << "Throughput: " << (((double)original_filesize / 1024 / 1024) / msec * 1000) << " MB/s" << std::endl;
-    // std::cout << "Reduction: " << (1 - ((double)original_filesize / compressed_filesize)) * 100 << "%" << std::endl;
-    // std::cout << "Compression Ratio:" << (double(8 * numLines * DataPoint::num_cols) / (compressed_filesize)) << std::endl;
+    std::cout << "Throughput: " << ((double)(numLines * DataPoint::num_cols) / ((double)msec / 1000)) << " DataPoint/s" << std::endl;
+    // std::cout << "Compression Ratio:" << compr_ratio << std::endl;
+    // std::cout << "Size reduction:" << 100 - compr_ratio << "%" << std::endl;
 
     return 0;
 }
