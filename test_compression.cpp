@@ -4,7 +4,6 @@
 #include "CSVReader.cpp"
 #include "DataPoint.cpp"
 
-const int DataPoint::num_cols = 1;
 int numLines = 0;
 
 int main(int argc, char *argv[])
@@ -26,7 +25,7 @@ int main(int argc, char *argv[])
         auto time = values[0];
         values.erase(values.begin());
         // c = new Compressor(new DataPoint(time, values), std::string(s+".bin"));
-        c = new Compressor(new DataPoint(time, values), out_filename);
+        c = new Compressor (time, values);
         // Decompressor("data.bin", 20);
     }
 
@@ -38,28 +37,35 @@ int main(int argc, char *argv[])
     }
 
     auto start = std::chrono::system_clock::now();
-    for (auto val : lines)
+    for (int i = 0; i < lines.size(); i++)
     {
+        auto val = lines[i];
         auto time = val[0];
         val.erase(val.begin());
-        c->append(new DataPoint(time, val));
+        c->append(time, val);
     }
 
-    auto compr_bits = c->bs.deque.size();
-
     auto end = std::chrono::system_clock::now();
+    
+    auto compr_bits = c->bs.size();
+    auto num_cols = c->num_cols;
     auto elapsed = end - start;
     auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-    auto num_points = numLines * DataPoint::num_cols;
+    auto num_points = numLines * (num_cols + 1);
     // 8 bytes per point (double)
     auto estimated_original_size = 8 * num_points;
     auto estimated_compressed_size = compr_bits / 8;
     auto compr_ratio = ((double)estimated_original_size / (estimated_compressed_size));
 
+    auto bytesperline = ((double)estimated_compressed_size / numLines);
+    std::cout << bytesperline << std::endl;
+
     std::cout.precision(3);
     std::cout << std::fixed;
     std::cout << "Computed in: " << msec << " msec" << std::endl;
-    std::cout << "Throughput: " << ((double)(numLines * DataPoint::num_cols) / ((double)msec / 1000)) << " DataPoint/s" << std::endl;
+    std::cout << "Throughput: " << ((double)(numLines * num_cols) / ((double)msec / 1000)) << " DataPoint/s" << std::endl;
+    std::cout << "Original size: \t\t" << estimated_original_size << std::endl;
+    std::cout << "Compressed size: \t" << estimated_compressed_size << std::endl;
     // std::cout << "Compression Ratio:" << compr_ratio << std::endl;
     // std::cout << "Size reduction:" << 100 - compr_ratio << "%" << std::endl;
 

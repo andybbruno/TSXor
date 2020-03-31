@@ -37,6 +37,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/test_compression.o",
+            // "args": ["dataset/test_2COLS.csv", "RES.bin"],
             "args": ["dataset/Bari_UTC_UNIX.csv", "RES.bin"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
