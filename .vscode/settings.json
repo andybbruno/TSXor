@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "vector": "cpp",
         "__bit_reference": "cpp",
         "__config": "cpp",
         "__debug": "cpp",
@@ -54,6 +55,7 @@
         "new": "cpp",
         "optional": "cpp",
         "ostream": "cpp",
+        "queue": "cpp",
         "ratio": "cpp",
         "set": "cpp",
         "sstream": "cpp",
@@ -62,6 +64,7 @@
         "streambuf": "cpp",
         "string": "cpp",
         "string_view": "cpp",
+        "strstream": "cpp",
         "system_error": "cpp",
         "thread": "cpp",
         "tuple": "cpp",
@@ -70,9 +73,6 @@
         "typeinfo": "cpp",
         "unordered_map": "cpp",
         "utility": "cpp",
-        "variant": "cpp",
-        "vector": "cpp",
-        "queue": "cpp",
-        "filesystem": "cpp"
+        "variant": "cpp"
     }
 }

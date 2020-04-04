@@ -4,18 +4,33 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "g++ build and debug active file",
+            "name": "g++ dataset",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "program": "${fileDirname}/test_compression_dataset.o",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
+            // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
+            "preLaunchTask": "g++ Dataset"
+        },
+        {
+            "name": "g++ build and debug active file",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/${fileBasenameNoExtension}.o",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
             "preLaunchTask": "g++ build active file"
         },
         {
@@ -29,7 +44,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
+            // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
             "preLaunchTask": "g++ Decompression"
         },
         {
@@ -38,14 +53,29 @@
             "request": "launch",
             "program": "${workspaceFolder}/test_compression.o",
             // "args": ["dataset/test_2COLS.csv", "RES.bin"],
-            "args": ["dataset/Bari_UTC_UNIX.csv", "RES.bin"],
+            // "args": ["dataset/Bari_UTC_UNIX.csv", "RES.bin"],
+            "args": ["100", "5"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
+            // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
             "preLaunchTask": "g++ Compression"
+        },
+        {
+            "name": "g++ beringei",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_beringei.o",
+            "args": ["100000"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
+            "preLaunchTask": "g++ Beringei"
         }
     ]
 }

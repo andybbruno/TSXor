@@ -36,4 +36,5 @@
 .DS_Store
 *.bin
 test_readcsv.dSYM
+/OLD
 /succinct

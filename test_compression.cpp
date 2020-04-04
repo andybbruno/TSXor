@@ -1,73 +1,75 @@
 #include <vector>
 #include <filesystem>
 #include "Compressor.cpp"
-#include "CSVReader.cpp"
-#include "DataPoint.cpp"
 
 int numLines = 0;
 
 int main(int argc, char *argv[])
 {
-    std::string filename = argv[1];     // "dataset/test.csv"
-    std::string out_filename = argv[2]; // "RES.bin"
+    // long lines = 100000000;
+    // int ncols = 20;
+    long lines = atoi(argv[1]);
+    int ncols = atoi(argv[2]);
 
-    CSVReader reader(filename);
+    auto t0 = 9468576;
 
-    Compressor *c;
+    srand(time(NULL));
 
-    std::time_t tt = std::time(NULL);
-    std::string s = std::ctime(&tt);
+    std::vector<std::vector<double>> values;
+    std::vector<uint64_t> times;
 
-    if (!reader.isEmpty())
+    std::vector<double> last(ncols, rand());
+
+    for (int i = 0; i < lines; i++)
     {
-        std::vector<double> values = reader.nextLine();
-        numLines++;
-        auto time = values[0];
-        values.erase(values.begin());
-        // c = new Compressor(new DataPoint(time, values), std::string(s+".bin"));
-        c = new Compressor (time, values);
-        // Decompressor("data.bin", 20);
-    }
+        times.push_back(i);
 
-    std::vector<std::vector<double>> lines;
-    while (!reader.isEmpty())
-    {
-        lines.push_back(reader.nextLine());
-        numLines++;
+        std::vector<double> tmp;
+        for (int j = 0; j < ncols; j++)
+        {
+            int sign = rand() % 2;
+            double val;
+            if (sign == 0)
+            {
+                val = (i == 0) ? (rand() % 100) : last[j] + (rand() % 8);
+            }
+            else
+            {
+                val = (i == 0) ? (rand() % 100) : last[j] - (rand() % 8);
+            }
+            tmp.push_back(val);
+        }
+        last = tmp;
+        values.push_back(tmp);
     }
 
     auto start = std::chrono::system_clock::now();
-    for (int i = 0; i < lines.size(); i++)
+
+    Compressor c(times[0], values[0]);
+
+    for (int i = 1; i < lines; i++)
     {
-        auto val = lines[i];
-        auto time = val[0];
-        val.erase(val.begin());
-        c->append(time, val);
+        c.append(times[i], values[i]);
     }
 
     auto end = std::chrono::system_clock::now();
-    
-    auto compr_bits = c->bs.size();
-    auto num_cols = c->num_cols;
-    auto elapsed = end - start;
+    auto elapsed = (end - start);
     auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-    auto num_points = numLines * (num_cols + 1);
-    // 8 bytes per point (double)
-    auto estimated_original_size = 8 * num_points;
-    auto estimated_compressed_size = compr_bits / 8;
-    auto compr_ratio = ((double)estimated_original_size / (estimated_compressed_size));
 
-    auto bytesperline = ((double)estimated_compressed_size / numLines);
-    std::cout << bytesperline << std::endl;
+    auto original_size = 8 * lines * (ncols + 1);
+    auto compressed_size = c.bs.size_in_bytes();
+
+    auto ts_compression = ((double)(8 * lines) / (c.ts_bits / 8));
+    auto data_compression = ((double)(8 * lines * ncols) / ((c.bs.size() - c.ts_bits) / 8));
 
     std::cout.precision(3);
     std::cout << std::fixed;
-    std::cout << "Computed in: " << msec << " msec" << std::endl;
-    std::cout << "Throughput: " << ((double)(numLines * num_cols) / ((double)msec / 1000)) << " DataPoint/s" << std::endl;
-    std::cout << "Original size: \t\t" << estimated_original_size << std::endl;
-    std::cout << "Compressed size: \t" << estimated_compressed_size << std::endl;
-    // std::cout << "Compression Ratio:" << compr_ratio << std::endl;
-    // std::cout << "Size reduction:" << 100 - compr_ratio << "%" << std::endl;
-
+    std::cout << "Computed in:         \t" << msec << " msec" << std::endl;
+    std::cout << "Throughput:          \t" << ((double)lines / ((double)msec / 1000)) / 1000000 << " M DataPoint/s" << std::endl;
+    std::cout << "Original size: \t\t" << ((double)original_size / 1000000) << " MB" << std::endl;
+    std::cout << "Compressed size: \t" << ((double)compressed_size / 1000000) << " MB" << std::endl;
+    std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl;
+    std::cout << "Time Reduction:      \t" << ts_compression << "x" << std::endl;
+    std::cout << "Data Reduction: \t" << data_compression << "x" << std::endl;
     return 0;
 }

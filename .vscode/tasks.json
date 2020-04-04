@@ -11,7 +11,7 @@
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
                 "-std=c++17"
             ],
             "options": {
@@ -51,6 +51,44 @@
             "options": {
                 "cwd": "/usr/bin"
             }
+        },
+        {
+            "type": "shell",
+            "label": "g++ Beringei",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-g",
+                "${workspaceFolder}/test_beringei.cpp",
+                "-o",
+                "${workspaceFolder}/test_beringei.o",
+                "-std=c++17"
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "g++ Dataset",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-g",
+                "${workspaceFolder}/test_compression_dataset.cpp",
+                "-o",
+                "${workspaceFolder}/test_compression_dataset.o",
+                "-std=c++17"
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
         }
     ]
 }

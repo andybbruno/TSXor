@@ -49,7 +49,7 @@ public:
             //I dati che ho sono a distanza di un giorno
             //Con 14 bit usati da beringei non riesco a coprire il delta
             //Quindi divido per 100
-            vec[0] = vec[0] / 100;
+            // vec[0] = vec[0] / 100;
             return vec;
         }
         else

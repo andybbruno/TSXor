@@ -12,37 +12,35 @@
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
-struct Compressor
+struct Beringei
 {
     std::fstream outfile;
 
     bool FIRST_BLOCK = true;
 
-    std::vector<double> storedLeadingZeros;
-    std::vector<double> storedTrailingZeros;
+    uint64_t storedLeadingZeros;
+    uint64_t storedTrailingZeros;
 
-    std::vector<double> last_vals;
+    double last_val;
 
     uint64_t last_time;
     uint64_t sec_last_time;
 
     uint64_t head_time;
-    std::vector<double> head_vals;
+    uint64_t head_val;
 
     succinct::bit_vector_builder bs;
 
-    uint64_t ts_bits;
-
-    Compressor(uint64_t time, std::vector<double> const &vals) : head_time(time), head_vals(vals)
+    Beringei(uint64_t time, uint64_t val) : head_time(time), head_val(val)
     {
-        ts_bits = 0;
-
-        last_vals = std::vector<double>(vals.size(), 0);
-        storedLeadingZeros = std::vector<double>(vals.size(), 64);
-        storedTrailingZeros = std::vector<double>(vals.size(), 0);
+        last_val = 0;
+        storedLeadingZeros = 64;
+        storedTrailingZeros = 0;
 
         bs.append_bits(time, 64, "Beringei TIME");
-
+        bs.append_bits(val, 64, "Beringei VAL");
+        
+        last_val = val;
         last_time = time;
         sec_last_time = 0;
     };
@@ -53,7 +51,6 @@ struct Compressor
         if (delta == 0)
         {
             bs.push_back(0);
-            ++ts_bits;
         }
         else
         {
@@ -72,14 +69,12 @@ struct Compressor
                 //DELTA_7_MASK adds '10' to delta
                 delta |= DELTA_7_MASK;
                 bs.append_bits(delta, 9, "Delta 9");
-                ts_bits += 9;
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to delta
                 delta |= DELTA_9_MASK;
                 bs.append_bits(delta, 12, "Delta 12");
-                ts_bits += 12;
                 break;
             case 10:
             case 11:
@@ -87,23 +82,21 @@ struct Compressor
                 //DELTA_12_MASK adds '1110' to delta
                 delta |= DELTA_12_MASK;
                 bs.append_bits(delta, 16, "Delta 16");
-                ts_bits += 16;
                 break;
             default:
                 // Append '1111'
                 bs.append_bits(0x0F, 4, "Delta mask 4");
                 bs.append_bits(delta, 32, "Delta 32");
-                ts_bits += 36;
                 break;
             }
         }
     }
 
-    void writeExistingLeading(uint64_t xored_, uint64_t trailZeros)
+    void writeExistingLeading(uint64_t xored_)
     {
         // Control bit '0'
         bs.push_back(0);
-        xored_ >>= trailZeros;
+        xored_ >>= storedTrailingZeros;
         uint64_t nbits = 64 - __builtin_clzll(xored_);
         bs.append_bits(xored_, nbits, "writeExistingLeading");
     }
@@ -121,59 +114,55 @@ struct Compressor
 
         xored_ >>= trailingZeros;
         bs.append_bits(xored_, significantBits, "writeNewLeading Final");
+
+        storedLeadingZeros = leadingZeros;
+        storedTrailingZeros = trailingZeros;
     }
 
-    void valuesEncoding(std::vector<double> const &values)
+    void valuesEncoding(double actual)
     {
-        for (int i = 0; i < values.size(); i++)
+        auto a = (uint64_t *)&actual;
+        auto b = (uint64_t *)&last_val;
+        uint64_t xored = *a ^ *b;
+        
+        // std::cout << std::hex << xored << std::endl;
+        
+        if (xored == 0)
         {
-            auto x = values[i];
-            auto y = last_vals[i];
-            uint64_t *a = (uint64_t *)&x;
-            uint64_t *b = (uint64_t *)&y;
-            uint64_t xored = *a ^ *b;
+            // Write 0
+            bs.push_back(0);
+        }
+        else
+        {
+            // count leading and traling zeros
+            uint64_t leadingZeros = __builtin_clzll(xored);
+            uint64_t trailingZeros = __builtin_ctzll(xored);
 
-            if (xored == 0)
+            //Write 1
+            bs.push_back(1);
+            if ((leadingZeros >= storedLeadingZeros) && (trailingZeros >= storedTrailingZeros))
             {
-                // Write 0
-                bs.push_back(0);
+                writeExistingLeading(xored);
             }
             else
             {
-                // count leading and traling zeros
-                uint64_t leadingZeros = __builtin_clzll(xored);
-                uint64_t trailingZeros = __builtin_ctzll(xored);
-
-                //Write 1
-                bs.push_back(1);
-                if ((leadingZeros >= storedLeadingZeros[i]) && (trailingZeros >= storedTrailingZeros[i]))
-                {
-                    writeExistingLeading(xored, storedTrailingZeros[i]);
-                }
-                else
-                {
-                    writeNewLeading(xored, leadingZeros, trailingZeros);
-                    storedLeadingZeros[i] = leadingZeros;
-                    storedTrailingZeros[i] = trailingZeros;
-                }
+                writeNewLeading(xored, leadingZeros, trailingZeros);
             }
         }
     }
 
-    void append(uint64_t ts, std::vector<double> const &values)
+    void append(uint64_t ts, double val)
     {
         if (FIRST_BLOCK)
         {
             auto delta = ts - head_time;
             bs.append_bits(delta, 14, "First Block");
-            ts_bits += 14;
-
-            for (auto v : values)
-                bs.append_bits(v, 64, "Beringei VAL");
-            last_vals = values;
 
             sec_last_time = head_time;
             last_time = ts;
+
+            valuesEncoding(val);
+            last_val = val;
 
             FIRST_BLOCK = false;
         }
@@ -183,9 +172,9 @@ struct Compressor
             deltaEncoding(delta);
             sec_last_time = last_time;
             last_time = ts;
-        }
 
-        valuesEncoding(values);
-        last_vals = values;
+            valuesEncoding(val);
+            last_val = val;
+        }
     }
 };
