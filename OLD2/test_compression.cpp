@@ -1,6 +1,6 @@
 #include <vector>
 #include <filesystem>
-#include "Compressor.cpp"
+#include "CompressorMulti.cpp"
 
 int numLines = 0;
 
@@ -45,31 +45,47 @@ int main(int argc, char *argv[])
 
     auto start = std::chrono::system_clock::now();
 
-    Compressor c(times[0], values[0]);
+    CompressorMulti c(0);
 
     for (int i = 1; i < lines; i++)
     {
-        c.append(times[i], values[i]);
+        c.addValue(times[i], values[i]);
     }
+
+    // auto end = std::chrono::system_clock::now();
+    // auto elapsed = (end - start);
+    // auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+
+    // auto original_size = 8 * lines * (ncols + 1);
+    // auto compressed_size = c.bs.size_in_bytes();
+
+    // auto ts_compression = ((double)(8 * lines) / (c.ts_bits / 8));
+    // auto data_compression = ((double)(8 * lines * ncols) / ((c.bs.size() - c.ts_bits) / 8));
+
+    // std::cout.precision(3);
+    // std::cout << std::fixed;
+    // std::cout << "Computed in:         \t" << msec << " msec" << std::endl;
+    // std::cout << "Throughput:          \t" << ((double)lines / ((double)msec / 1000)) / 1000000 << " M DataPoint/s" << std::endl;
+    // std::cout << "Original size: \t\t" << ((double)original_size / 1000000) << " MB" << std::endl;
+    // std::cout << "Compressed size: \t" << ((double)compressed_size / 1000000) << " MB" << std::endl;
+    // std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl;
+    // std::cout << "Time Reduction:      \t" << ts_compression << "x" << std::endl;
+    // std::cout << "Data Reduction: \t" << data_compression << "x" << std::endl;
+
 
     auto end = std::chrono::system_clock::now();
     auto elapsed = (end - start);
     auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 
-    auto original_size = 8 * lines * (ncols + 1);
-    auto compressed_size = c.bs.size_in_bytes();
-
-    auto ts_compression = ((double)(8 * lines) / (c.ts_bits / 8));
-    auto data_compression = ((double)(8 * lines * ncols) / ((c.bs.size() - c.ts_bits) / 8));
+    auto original_size = 64 * lines * (ncols + 1);
+    auto compressed_size = c.out.size();
 
     std::cout.precision(3);
     std::cout << std::fixed;
     std::cout << "Computed in:         \t" << msec << " msec" << std::endl;
     std::cout << "Throughput:          \t" << ((double)lines / ((double)msec / 1000)) / 1000000 << " M DataPoint/s" << std::endl;
-    std::cout << "Original size: \t\t" << ((double)original_size / 1000000) << " MB" << std::endl;
-    std::cout << "Compressed size: \t" << ((double)compressed_size / 1000000) << " MB" << std::endl;
+    std::cout << "Original size: \t\t" << original_size<< " Bits" << std::endl;
+    std::cout << "Compressed size: \t" << compressed_size << " Bits" << std::endl;
     std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl;
-    std::cout << "Time Reduction:      \t" << ts_compression << "x" << std::endl;
-    std::cout << "Data Reduction: \t" << data_compression << "x" << std::endl;
     return 0;
 }

@@ -1,5 +1,6 @@
 #include <vector>
 #include "succinct/bit_vector.hpp"
+#include <map>
 
 //ZIGZAG ENCODING/DECODING FOR 32 BITS
 #define encodeZZ(i) (i >> 31) ^ (i << 1)
@@ -25,6 +26,8 @@ struct CompressorMulti
     long blockTimestamp = 0;
 
     succinct::bit_vector_builder out;
+
+    std::map<std::string, int> mymap;
 
     // We should have access to the series?
 
@@ -172,6 +175,19 @@ struct CompressorMulti
             {
                 int leadingZeros = __builtin_clzll(xor_);
                 int trailingZeros = __builtin_ctzll(xor_);
+
+                
+                // uint64_t value = xor_ >> trailingZeros;
+                std::string key = std::to_string((uint64_t)y);
+
+                if (mymap.find(key) == mymap.end())
+                {
+                    mymap[key]++;
+                }
+                else
+                {
+                    mymap.insert(std::make_pair(key, 1));
+                }
 
                 // Check overflow of leading? Can't be 32!
                 if (leadingZeros >= 32)
