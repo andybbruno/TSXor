@@ -6,7 +6,7 @@
     "configurations": [
 
         {
-            "name": "g++ dataset",
+            "name": "g++ compression dataset",
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/test_compression_dataset.o",
@@ -17,7 +17,21 @@
             "externalConsole": false,
             "MIMode": "lldb",
             // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
-            "preLaunchTask": "g++ Dataset"
+            "preLaunchTask": "g++ Compression Dataset"
+        },
+        {
+            "name": "g++ decompression dataset",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_decompression_dataset.o",
+            "args": ["RES.bin"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
+            "preLaunchTask": "g++ Decompression Dataset"
         },
         {
             "name": "g++ build and debug active file",
@@ -32,20 +46,6 @@
             "MIMode": "lldb",
             // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
             "preLaunchTask": "g++ build active file"
-        },
-        {
-            "name": "g++ decompression",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/test_decompression.o",
-            "args": ["RES.bin"],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "lldb",
-            // "miDebuggerPath":"/Applications/Xcode_10.3.app/Contents/Developer/usr/bin/lldb-mi",
-            "preLaunchTask": "g++ Decompression"
         },
         {
             "name": "g++ compression",

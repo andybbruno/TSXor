@@ -73,13 +73,32 @@
         },
         {
             "type": "shell",
-            "label": "g++ Dataset",
+            "label": "g++ Compression Dataset",
             "command": "/usr/bin/g++",
             "args": [
                 "-g",
                 "${workspaceFolder}/test_compression_dataset.cpp",
                 "-o",
                 "${workspaceFolder}/test_compression_dataset.o",
+                "-std=c++17"
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "g++ Decompression Dataset",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-g",
+                "${workspaceFolder}/test_decompression_dataset.cpp",
+                "-o",
+                "${workspaceFolder}/test_decompression_dataset.o",
                 "-std=c++17"
             ],
             "options": {

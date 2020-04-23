@@ -86,9 +86,9 @@ struct CompressorMulti
     {
         // These are selected to test interoperability and correctness of the solution,
         // this can be read with go-tsz
-        // out.writeBits(0x0F, 4);
-        // out.writeBits(0xFFFFFFFF, 32);
-        // out.skipBit();
+        out.writeBits(0x0F, 4);
+        out.writeBits(0xFFFFFFFF, 32);
+        out.skipBit();
         // out.flush();
     }
 
