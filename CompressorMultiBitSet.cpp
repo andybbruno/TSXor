@@ -1,11 +1,12 @@
 #include <vector>
-#include "succinct/bit_vector.hpp"
 #include <map>
-
+#include <string>
+#include "bitset.cpp"
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
+
 
 inline uint64_t encodeZZ(int64_t i)
 {
@@ -16,8 +17,18 @@ inline int64_t decodeZZ(uint64_t i){
     return (i >> 1) ^ (-(i & 1));
 }
 
+
+inline uint32_t digits(uint64_t v)
+{
+    return 1 + (std::uint32_t)(v >= 10) + (std::uint32_t)(v >= 100) + (std::uint32_t)(v >= 1000) + (std::uint32_t)(v >= 10000) + (std::uint32_t)(v >= 100000) + (std::uint32_t)(v >= 1000000) + (std::uint32_t)(v >= 10000000) + (std::uint32_t)(v >= 100000000) + (std::uint32_t)(v >= 1000000000) + (std::uint32_t)(v >= 10000000000ull) + (std::uint32_t)(v >= 100000000000ull) + (std::uint32_t)(v >= 1000000000000ull) + (std::uint32_t)(v >= 10000000000000ull) + (std::uint32_t)(v >= 100000000000000ull) + (std::uint32_t)(v >= 1000000000000000ull) + (std::uint32_t)(v >= 10000000000000000ull) + (std::uint32_t)(v >= 100000000000000000ull) + (std::uint32_t)(v >= 1000000000000000000ull) + (std::uint32_t)(v >= 10000000000000000000ull);
+}
+
 struct CompressorMulti
 {
+    std::map<std::string, int> map;
+    int count_0 = 0;
+    int count_A = 0;
+    int count_B = 0;
     uint8_t FIRST_DELTA_BITS = 14;
 
     std::vector<uint64_t> storedLeadingZeros;
@@ -27,9 +38,7 @@ struct CompressorMulti
     long storedDelta = 0;
     long blockTimestamp = 0;
 
-    succinct::bit_vector_builder out;
-
-    std::map<std::string, int> mymap;
+    bitset out;
 
     // We should have access to the series?
 
@@ -91,9 +100,13 @@ struct CompressorMulti
     {
         // These are selected to test interoperability and correctness of the solution,
         // this can be read with go-tsz
-        // out.writeBits(0x0F, 4);
-        // out.writeBits(0xFFFFFFFF, 32);
-        // out.skipBit();
+        out.writeBits(0x0F, 4);
+        out.writeBits(0xFFFFFFFF, 32);
+        out.push_back(0);
+
+        map.insert(std::make_pair("count 0", count_0));
+        map.insert(std::make_pair("count A", count_A));
+        map.insert(std::make_pair("count B", count_B));
         // out.flush();
     }
 
@@ -131,25 +144,25 @@ struct CompressorMulti
             case 7:
                 //DELTA_7_MASK adds '10' to deltaD
                 deltaD |= DELTA_7_MASK;
-                out.append_bits(deltaD, 9);
+                out.writeBits(deltaD, 9);
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to deltaD
                 deltaD |= DELTA_9_MASK;
-                out.append_bits(deltaD, 12);
+                out.writeBits(deltaD, 12);
                 break;
             case 10:
             case 11:
             case 12:
                 //DELTA_12_MASK adds '1110' to deltaD
                 deltaD |= DELTA_12_MASK;
-                out.append_bits(deltaD, 16);
+                out.writeBits(deltaD, 16);
                 break;
             default:
                 // Append '1111'
-                out.append_bits(0x0F, 4);
-                out.append_bits(deltaD, 32);
+                out.writeBits(0x0F, 4);
+                out.writeBits(deltaD, 32);
                 break;
             }
         }
@@ -171,25 +184,14 @@ struct CompressorMulti
             if (xor_ == 0)
             {
                 // Write 0
-                out.skipBit();
+                out.push_back(0);
+
+                count_0++;
             }
             else
             {
                 int leadingZeros = __builtin_clzll(xor_);
                 int trailingZeros = __builtin_ctzll(xor_);
-
-                
-                // uint64_t value = xor_ >> trailingZeros;
-                std::string key = std::to_string((uint64_t)y);
-
-                if (mymap.find(key) == mymap.end())
-                {
-                    mymap[key]++;
-                }
-                else
-                {
-                    mymap.insert(std::make_pair(key, 1));
-                }
 
                 // Check overflow of leading? Can't be 32!
                 if (leadingZeros >= 32)
@@ -204,18 +206,33 @@ struct CompressorMulti
                 }
 
                 // Store bit '1'
-                out.writeBit();
+                out.push_back(1);
 
                 if (leadingZeros >= storedLeadingZeros[i] && trailingZeros >= storedTrailingZeros[i])
                 {
-                    out.skipBit();
+                    out.push_back(0);
                     int significantBits = 64 - storedLeadingZeros[i] - storedTrailingZeros[i];
                     xor_ >>= storedTrailingZeros[i];
                     out.writeBits(xor_, significantBits);
+
+                    auto dy = digits(y);
+                    std::string s1 = dy < 10 ? "0" + std::to_string(dy) : std::to_string(dy);
+                    std::string s2 = significantBits < 10 ? "0" + std::to_string(significantBits) : std::to_string(significantBits);
+                    auto key = "A: " + s1 + " - " + s2;
+
+                    if (map.find(key) != map.end())
+                    {
+                        map[key] = map[key] + 1;
+                    }
+                    else
+                    {
+                        map.insert(std::make_pair(key, 1));
+                    }
+                    count_A++;
                 }
                 else
                 {
-                    out.writeBit();
+                    out.push_back(1);
                     out.writeBits(leadingZeros, 5); // Number of leading zeros in the next 5 bits
 
                     int significantBits = 64 - leadingZeros - trailingZeros;
@@ -225,6 +242,20 @@ struct CompressorMulti
 
                     storedLeadingZeros[i] = leadingZeros;
                     storedTrailingZeros[i] = trailingZeros;
+
+                    auto dy = digits(y);
+                    std::string s1 = dy < 10 ? "0" + std::to_string(dy) : std::to_string(dy);
+                    std::string s2 = significantBits < 10 ? "0" + std::to_string(significantBits) : std::to_string(significantBits);
+                    auto key = "B: " + s1 + " - " + s2;
+                    if (map.find(key) != map.end())
+                    {
+                        map[key] = map[key] + 1;
+                    }
+                    else
+                    {
+                        map.insert(std::make_pair(key, 1));
+                    }
+                    count_B++;
                 }
             }
             storedValues[i] = values[i];

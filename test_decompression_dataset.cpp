@@ -9,7 +9,7 @@ int numLines = 0;
 int main(int argc, char *argv[])
 {
 
-    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/Bari_full_UTC_UNIX.csv");
+    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/_DEBUG_Decompress.csv");
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);

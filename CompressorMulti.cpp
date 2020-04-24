@@ -1,20 +1,32 @@
 #include <vector>
+#include <map>
+#include <string>
 #include "succinct/bit_vector.hpp"
-
-//ZIGZAG ENCODING/DECODING FOR 32 BITS
-#define encodeZZ(i) (i >> 31) ^ (i << 1)
-#define decodeZZ(i) (i << 1) ^ (i >> 31)
-
-//ZIGZAG ENCODING/DECODING FOR 64 BITS
-#define encodeZZ64(i) (i >> 63) ^ (i << 1)
-#define decodeZZ64(i) (i << 1) ^ (i >> 63)
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
+inline uint64_t encodeZZ(int64_t i)
+{
+    return (i >> 63) ^ (i << 1);
+}
+
+inline int64_t decodeZZ(uint64_t i){
+    return (i >> 1) ^ (-(i & 1));
+}
+
+inline uint32_t digits(uint64_t v)
+{
+    return 1 + (std::uint32_t)(v >= 10) + (std::uint32_t)(v >= 100) + (std::uint32_t)(v >= 1000) + (std::uint32_t)(v >= 10000) + (std::uint32_t)(v >= 100000) + (std::uint32_t)(v >= 1000000) + (std::uint32_t)(v >= 10000000) + (std::uint32_t)(v >= 100000000) + (std::uint32_t)(v >= 1000000000) + (std::uint32_t)(v >= 10000000000ull) + (std::uint32_t)(v >= 100000000000ull) + (std::uint32_t)(v >= 1000000000000ull) + (std::uint32_t)(v >= 10000000000000ull) + (std::uint32_t)(v >= 100000000000000ull) + (std::uint32_t)(v >= 1000000000000000ull) + (std::uint32_t)(v >= 10000000000000000ull) + (std::uint32_t)(v >= 100000000000000000ull) + (std::uint32_t)(v >= 1000000000000000000ull) + (std::uint32_t)(v >= 10000000000000000000ull);
+}
+
 struct CompressorMulti
 {
+    std::map<std::string, int> map;
+    int count_0 = 0;
+    int count_A = 0;
+    int count_B = 0;
     uint8_t FIRST_DELTA_BITS = 14;
 
     std::vector<uint64_t> storedLeadingZeros;
@@ -89,6 +101,10 @@ struct CompressorMulti
         out.writeBits(0x0F, 4);
         out.writeBits(0xFFFFFFFF, 32);
         out.skipBit();
+
+        map.insert(std::make_pair("count 0", count_0));
+        map.insert(std::make_pair("count A", count_A));
+        map.insert(std::make_pair("count B", count_B));
         // out.flush();
     }
 
@@ -167,6 +183,8 @@ struct CompressorMulti
             {
                 // Write 0
                 out.skipBit();
+
+                count_0++;
             }
             else
             {
@@ -194,6 +212,21 @@ struct CompressorMulti
                     int significantBits = 64 - storedLeadingZeros[i] - storedTrailingZeros[i];
                     xor_ >>= storedTrailingZeros[i];
                     out.writeBits(xor_, significantBits);
+
+                    auto dy = digits(y);
+                    std::string s1 = dy < 10 ? "0" + std::to_string(dy) : std::to_string(dy);
+                    std::string s2 = significantBits < 10 ? "0" + std::to_string(significantBits) : std::to_string(significantBits);
+                    auto key = "A: " + s1 + " - " + s2;
+
+                    if (map.find(key) != map.end())
+                    {
+                        map[key] = map[key] + 1;
+                    }
+                    else
+                    {
+                        map.insert(std::make_pair(key, 1));
+                    }
+                    count_A++;
                 }
                 else
                 {
@@ -207,6 +240,20 @@ struct CompressorMulti
 
                     storedLeadingZeros[i] = leadingZeros;
                     storedTrailingZeros[i] = trailingZeros;
+
+                    auto dy = digits(y);
+                    std::string s1 = dy < 10 ? "0" + std::to_string(dy) : std::to_string(dy);
+                    std::string s2 = significantBits < 10 ? "0" + std::to_string(significantBits) : std::to_string(significantBits);
+                    auto key = "B: " + s1 + " - " + s2;
+                    if (map.find(key) != map.end())
+                    {
+                        map[key] = map[key] + 1;
+                    }
+                    else
+                    {
+                        map.insert(std::make_pair(key, 1));
+                    }
+                    count_B++;
                 }
             }
             storedValues[i] = values[i];

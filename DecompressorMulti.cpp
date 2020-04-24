@@ -2,9 +2,15 @@
 #include <string>
 #include "succinct/bit_vector.hpp"
 
-//ZIGZAG ENCODING/DECODING FOR 32 BITS
-#define encodeZZ(i) (i >> 31) ^ (i << 1)
-#define decodeZZ(i) (i << 1) ^ (i >> 31)
+inline uint64_t encodeZZ(int64_t i)
+{
+    return (i >> 63) ^ (i << 1);
+}
+
+inline int64_t decodeZZ(uint64_t i)
+{
+    return (i >> 1) ^ (-(i & 1));
+}
 
 struct PairMulti
 {
@@ -194,8 +200,8 @@ struct DecompressorMulti
     //     }
     // }
 
-    // static long decodeZigZag32(final long n)
-    // {
-    //     return (n >>> 1) ^ -(n & 1);
-    // }
+    static long decodeZigZag32(final long n)
+    {
+        return (n >>> 1) ^ -(n & 1);
+    }
 };

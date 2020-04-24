@@ -1,5 +1,6 @@
 #include <vector>
 #include <filesystem>
+// #include "CompressorMultiBitSet.cpp"
 #include "CompressorMulti.cpp"
 #include "CSVReader.cpp"
 
@@ -7,8 +8,12 @@ int numLines = 0;
 
 int main(int argc, char *argv[])
 {
+    if (argc < 2)
+    {
+        return 0;
+    }
 
-    CSVReader reader("dataset/Bari_full_UTC_UNIX_STD.csv");
+    CSVReader reader(argv[1]);
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);
@@ -40,7 +45,7 @@ int main(int argc, char *argv[])
     {
         c.addValue(times[i], values[i]);
     }
-
+    c.close();
     auto end = std::chrono::system_clock::now();
     auto elapsed = (end - start);
     auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
@@ -59,10 +64,16 @@ int main(int argc, char *argv[])
     std::cout << std::fixed;
     std::cout << "Computed in:         \t" << msec << " msec" << std::endl;
     std::cout << "Throughput:          \t" << ((double)nlines / ((double)msec / 1000)) / 1000000 << " M DataPoint/s" << std::endl;
-    std::cout << "Original size: \t\t" << original_size<< " Bits" << std::endl;
+    std::cout << "Original size: \t\t" << original_size << " Bits" << std::endl;
     std::cout << "Compressed size: \t" << compressed_size << " Bits" << std::endl;
     std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl;
     // std::cout << "Time Reduction:      \t" << ts_compression << "x" << std::endl;
     // std::cout << "Data Reduction: \t" << data_compression << "x" << std::endl;
+
+    // for (auto x : c.map)
+    // {
+    //     std::cout << x.first << " - " << x.second << std::endl;
+    // }
+
     return 0;
 }

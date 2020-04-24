@@ -1,17 +1,22 @@
-#include<iostream> 
-#include<limits.h>
+#include <iostream>
+#include <limits.h>
 
-//ZIGZAG ENCODING/DECODING FOR 32 BITS
-#define encodeZZ(i) (i >> 31) ^ (i << 1)
-#define decodeZZ(i) (i << 1) ^ (i >> 31)
+inline uint64_t encodeZZ(int64_t i)
+{
+    return (i >> 63) ^ (i << 1);
+}
+
+inline int64_t decodeZZ(uint64_t i){
+    return (i >> 1) ^ (-(i & 1));
+}
 
 int main()
 {
-    for (int i = INT_MIN; i < INT_MAX; i++)
-    {   
-        int enc = (encodeZZ(i));
-        int dec = (decodeZZ(i));
-        assert(enc == dec);
+    for (int64_t i = INT64_MIN; i < INT64_MAX; i+=100000)
+    {
+        uint64_t enc = (encodeZZ(i));
+        int64_t dec = (decodeZZ(enc));
+        assert(i == dec);
     }
     return 0;
 }

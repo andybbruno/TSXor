@@ -4,13 +4,20 @@
 #include <fstream>
 #include <iostream>
 
-//ZIGZAG ENCODING/DECODING FOR 32 BITS
-#define encodeZZ(i) (i >> 31) ^ (i << 1)
-#define decodeZZ(i) (i << 1) ^ (i >> 31)
-
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
+
+
+inline uint64_t encodeZZ(int64_t i)
+{
+    return (i >> 63) ^ (i << 1);
+}
+
+inline int64_t decodeZZ(uint64_t i){
+    return (i >> 1) ^ (-(i & 1));
+}
+
 
 struct Beringei
 {
