@@ -2,10 +2,6 @@
 #include <string>
 #include "succinct/bit_vector.hpp"
 
-inline uint64_t encodeZZ(int64_t i)
-{
-    return (i >> 63) ^ (i << 1);
-}
 
 inline int64_t decodeZZ(uint64_t i)
 {
@@ -106,7 +102,7 @@ struct DecompressorMulti
             }
             for (int i = 0; i < ncols; i++)
             {
-                auto read = in->get_word(curr_pos);
+                auto read = in->get_bits(curr_pos, 64);
                 double *p = (double *)&read;
                 storedVal[i] = *p;
                 curr_pos += 64;
@@ -200,8 +196,8 @@ struct DecompressorMulti
     //     }
     // }
 
-    static long decodeZigZag32(final long n)
-    {
-        return (n >>> 1) ^ -(n & 1);
-    }
+    // static long decodeZigZag32(final long n)
+    // {
+    //     return (n >>> 1) ^ -(n & 1);
+    // }
 };

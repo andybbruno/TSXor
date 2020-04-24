@@ -12,10 +12,6 @@ inline uint64_t encodeZZ(int64_t i)
     return (i >> 63) ^ (i << 1);
 }
 
-inline int64_t decodeZZ(uint64_t i){
-    return (i >> 1) ^ (-(i & 1));
-}
-
 inline uint32_t digits(uint64_t v)
 {
     return 1 + (std::uint32_t)(v >= 10) + (std::uint32_t)(v >= 100) + (std::uint32_t)(v >= 1000) + (std::uint32_t)(v >= 10000) + (std::uint32_t)(v >= 100000) + (std::uint32_t)(v >= 1000000) + (std::uint32_t)(v >= 10000000) + (std::uint32_t)(v >= 100000000) + (std::uint32_t)(v >= 1000000000) + (std::uint32_t)(v >= 10000000000ull) + (std::uint32_t)(v >= 100000000000ull) + (std::uint32_t)(v >= 1000000000000ull) + (std::uint32_t)(v >= 10000000000000ull) + (std::uint32_t)(v >= 100000000000000ull) + (std::uint32_t)(v >= 1000000000000000ull) + (std::uint32_t)(v >= 10000000000000000ull) + (std::uint32_t)(v >= 100000000000000000ull) + (std::uint32_t)(v >= 1000000000000000000ull) + (std::uint32_t)(v >= 10000000000000000000ull);
@@ -83,7 +79,8 @@ struct CompressorMulti
         out.writeBits(storedDelta, FIRST_DELTA_BITS);
         for (double d : values)
         {
-            out.writeBits(d, 64);
+            uint64_t *x = (uint64_t *)&d;
+            out.writeBits(*x, 64);
         }
 
         storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
