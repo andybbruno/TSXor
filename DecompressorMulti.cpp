@@ -1,12 +1,7 @@
 #include <vector>
 #include <string>
 #include "succinct/bit_vector.hpp"
-
-
-inline int64_t decodeZZ(uint64_t i)
-{
-    return (i >> 1) ^ (-(i & 1));
-}
+#include "lib/zigzag.hpp"
 
 struct PairMulti
 {

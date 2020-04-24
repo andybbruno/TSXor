@@ -1,20 +1,13 @@
 #include <vector>
-#include "succinct/bit_vector.hpp"
 #include <map>
+#include "lib/zigzag.hpp"
+#include "succinct/bit_vector.hpp"
 
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
-inline uint64_t encodeZZ(int64_t i)
-{
-    return (i >> 63) ^ (i << 1);
-}
-
-inline int64_t decodeZZ(uint64_t i){
-    return (i >> 1) ^ (-(i & 1));
-}
 
 struct CompressorMulti
 {
@@ -117,7 +110,7 @@ struct CompressorMulti
         }
         else
         {
-            deltaD = encodeZZ(deltaD);
+            deltaD = zz::encode(deltaD);
             auto length = 32 - __builtin_clz(deltaD);
 
             switch (length)
