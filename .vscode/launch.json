@@ -10,7 +10,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/test_compression_dataset.o",
-            "args": ["dataset/globalterrorism_UTC_UNIX.csv"],
+            "args": ["dataset/Bari_full_UTC_UNIX.csv"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
