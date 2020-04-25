@@ -1,11 +1,14 @@
 #include <vector>
 #include <map>
+#include <math.h>
 #include <string>
-#include "succinct/bit_vector.hpp"
+#include <iostream>
+// #include "succinct/bit_vector.hpp"
 #include "lib/zigzag.hpp"
 #include "lib/elias.hpp"
+#include "lib/BitVector.hpp"
 
-const auto &ENCODE = elias::gamma;
+const auto &CONVERT = elias::gamma;
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
@@ -46,7 +49,7 @@ struct CompressorMultiElias
     long storedDelta = 0;
     long blockTimestamp = 0;
 
-    succinct::bit_vector_builder out;
+    BitVector out;
 
     // We should have access to the series?
 
@@ -60,7 +63,7 @@ struct CompressorMultiElias
     {
         // One byte: length of the first delta
         // One byte: precision of timestamps
-        out.writeBits(timestamp, 64);
+        out.append(timestamp, 64);
     }
 
     /**
@@ -91,11 +94,16 @@ struct CompressorMultiElias
         storedValues = values;
 
         // non funziona se storedDelta == 0
-        // out.writeBits(storedDelta, FIRST_DELTA_BITS);
+        // out.append(storedDelta, FIRST_DELTA_BITS);
+        
+        auto t = zz::encode(storedDelta);
+        auto enc = CONVERT(t);
+        out.append(enc.first, enc.second);
+
         for (double d : values)
         {
             uint64_t *x = (uint64_t *)&d;
-            out.writeBits(*x, 64);
+            out.append(*x, 64);
         }
 
         storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
@@ -110,9 +118,7 @@ struct CompressorMultiElias
     {
         // These are selected to test interoperability and correctness of the solution,
         // this can be read with go-tsz
-        out.writeBits(0x0F, 4);
-        out.writeBits(0xFFFFFFFF, 32);
-        out.skipBit();
+        out.close();
 
         // map.insert(std::make_pair("count 0", count_0));
         // map.insert(std::make_pair("count A", count_A));
@@ -138,7 +144,7 @@ struct CompressorMultiElias
         long deltaD = newDelta - storedDelta + 1;
 
         deltaD = zz::encode(deltaD);
-        auto delta = ENCODE(deltaD);
+        auto delta = CONVERT(deltaD);
 
         // if ((delta.second > 63) || ((delta.first >> delta.second) == 0))
         // {
@@ -146,7 +152,7 @@ struct CompressorMultiElias
         //     std::cout << delta.first << " " << delta.second << std::endl;
         // }
 
-        out.append_bits(delta.first, delta.second);
+        out.append(delta.first, delta.second);
 
         storedDelta = newDelta;
         storedTimestamp = timestamp;
@@ -158,17 +164,19 @@ struct CompressorMultiElias
         {
             double diff = storedValues[i] - values[i];
 
-            if (diff == 0)
+            // if (diff == 0)
+            if ((diff == 0) || (isnan(diff)))
             {
                 // Write 0
                 out.push_back(0);
             }
+            // DA FAR CONTROLLARE!!!
+            //
             else if (isnan(diff))
             {
                 // Write '10'
                 // out.push_back(1);
                 // out.push_back(0);
-                // out.append_bits(NAN, 63);
             }
             else
             {
@@ -177,24 +185,26 @@ struct CompressorMultiElias
                 // out.push_back(1);
 
                 uint64_t int_part = zz::encode((int64_t)diff);
-                uint32_t dec_part = count_decimal(diff);
+                auto d_int = CONVERT(int_part);
+                out.append(d_int.first, d_int.second);
 
-                auto d_int = ENCODE(int_part);
-                auto d_dec = ENCODE(dec_part);
+                uint32_t dec_part = count_decimal(diff);
+                auto d_dec = CONVERT(dec_part);
+                out.append(d_dec.first, d_dec.second);
+
 
                 // if ((d_int.second > 63) || ((d_int.first >> d_int.second) == 0))
                 // {
                 //     std::cout << diff << std::endl;
                 //     std::cout << d_int.first << " " << d_int.second << std::endl;
                 // }
+
+
                 // if ((d_dec.second > 63) || ((d_dec.first >> d_dec.second) == 0))
                 // {
                 //     std::cout << diff << std::endl;
                 //     std::cout << d_dec.first << " " << d_dec.second << std::endl;
                 // }
-
-                out.append_bits(d_int.first, d_int.second);
-                out.append_bits(d_dec.first, d_dec.second);
             }
             storedValues[i] = values[i];
         }
