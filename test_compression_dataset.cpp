@@ -1,6 +1,6 @@
 #include <vector>
 #include <filesystem>
-// #include "CompressorMultiBitSet.cpp"
+// #include "CompressorMultiBitVector.cpp"
 #include "CompressorMulti.cpp"
 #include "CSVReader.cpp"
 
