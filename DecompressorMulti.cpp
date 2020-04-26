@@ -1,7 +1,8 @@
 #include <vector>
+#include <iostream>
 #include <string>
-#include "lib/BitVector.hpp"
 #include "lib/zigzag.hpp"
+#include "lib/BitVector.cpp"
 
 struct PairMulti
 {
@@ -21,28 +22,24 @@ struct PairMulti
     }
 };
 
-struct DecompressorMultiElias
+struct DecompressorMulti
 {
 
     std::vector<uint64_t> storedLeadingZeros;
     std::vector<uint64_t> storedTrailingZeros;
     std::vector<double> storedVal;
-    uint8_t FIRST_DELTA_BITS = 14;
+    uint8_t FIRST_DELTA_BITS = 32;
 
-    long storedTimestamp = 0;
-    long storedDelta = 0;
-
-    long blockTimestamp = 0;
+    uint64_t storedTimestamp = 0;
+    uint64_t storedDelta = 0;
+    uint64_t blockTimestamp = 0;
 
     bool endOfStream = false;
 
     BitVector in;
-    size_t in_size = 0;
-    size_t curr_pos = 0;
+    uint64_t ncols;
 
-    int ncols;
-
-    DecompressorMultiElias(BitVector const &input, int n)
+    DecompressorMulti(BitVector const &input, uint64_t n)
     {
         in = input;
         ncols = n;
@@ -56,8 +53,7 @@ struct DecompressorMultiElias
 
     void readHeader()
     {
-        blockTimestamp = in->get_bits(0, 64);
-        curr_pos += 64;
+        blockTimestamp = in.get(64);
     }
 
     /**
@@ -85,8 +81,7 @@ struct DecompressorMultiElias
         if (storedTimestamp == 0)
         {
             // First item to read
-            storedDelta = in->get_bits(curr_pos, FIRST_DELTA_BITS);
-            curr_pos += FIRST_DELTA_BITS;
+            storedDelta = in.get(FIRST_DELTA_BITS);
 
             if (storedDelta == (1 << 14) - 1)
             {
@@ -95,102 +90,103 @@ struct DecompressorMultiElias
             }
             for (int i = 0; i < ncols; i++)
             {
-                auto read = in->get_bits(curr_pos, 64);
+                uint64_t read = in.get(64);
                 double *p = (double *)&read;
                 storedVal[i] = *p;
-                curr_pos += 64;
             }
             storedTimestamp = blockTimestamp + storedDelta;
         }
-        // else
-        // {
-        //     nextTimestamp();
-        //     nextValue();
-        // }
+        else
+        {
+            nextTimestamp();
+            // nextValue();
+        }
     }
 
-    // int bitsToRead()
-    // {
-    //     int val = in.nextClearBit(4);
-    //     int toRead = 0;
+    uint64_t bitsToRead()
+    {
+        uint64_t val = in.nextZeroUntil(4);
+        uint64_t toRead = 0;
 
-    //     switch (val)
-    //     {
-    //     case 0x00:
-    //         break;
-    //     case 0x02:
-    //         toRead = 7; // '10'
-    //         break;
-    //     case 0x06:
-    //         toRead = 9; // '110'
-    //         break;
-    //     case 0x0e:
-    //         toRead = 12;
-    //         break;
-    //     case 0x0F:
-    //         toRead = 32;
-    //         break;
-    //     }
+        switch (val)
+        {
+        case 0x00:
+            break;
+        case 0x02:
+            toRead = 7; // '10'
+            break;
+        case 0x06:
+            toRead = 9; // '110'
+            break;
+        case 0x0e:
+            toRead = 12;
+            break;
+        case 0x0F:
+            toRead = 32;
+            // toRead = 64;
+            break;
+        }
 
-    //     return toRead;
-    // }
+        return toRead;
+    }
 
-    // void nextTimestamp()
-    // {
-    //     // Next, read timestamp
-    //     long deltaDelta = 0;
-    //     int toRead = bitsToRead();
-    //     if (toRead > 0)
-    //     {
-    //         deltaDelta = in.getLong(toRead);
-    //         if (toRead == 32)
-    //         {
-    //             if ((int)deltaDelta == 0xFFFFFFFF)
-    //             {
-    //                 // End of stream
-    //                 endOfStream = true;
-    //                 return;
-    //             }
-    //         }
-    //         deltaDelta = decodeZigZag32(deltaDelta);
-    //         deltaDelta = (int)(deltaDelta);
-    //     }
+    void nextTimestamp()
+    {
+        // Next, read timestamp
+        uint64_t deltaDelta = 0;
+        uint64_t toRead = bitsToRead();
+        if (toRead > 0)
+        {
+            deltaDelta = in.get(toRead);
+            if (toRead == 32)
+            // if (toRead == 64)
+            {
+                if (deltaDelta == UINT32_MAX)
+                // if (deltaDelta == UINT64_MAX)
+                {
+                    // End of stream
+                    endOfStream = true;
+                    return;
+                }
+            }
+            deltaDelta = zz::decode(deltaDelta);
+            // deltaDelta = (int)(deltaDelta);
+        }
 
-    //     storedDelta = storedDelta + deltaDelta;
-    //     storedTimestamp = storedDelta + storedTimestamp;
-    //     // nextValue();
-    // }
+        storedDelta = storedDelta + deltaDelta;
+        storedTimestamp = storedDelta + storedTimestamp;
+        nextValue();
+    }
 
-    // void nextValue()
-    // {
-    //     for (int i = 0; i < ncols; i++)
-    //     {
-    //         // Read value
-    //         if (in.readBit())
-    //         {
-    //             // else -> same value as before
-    //             if (in.readBit())
-    //             {
-    //                 // New leading and trailing zeros
-    //                 storedLeadingZeros.set(i, (int)in.getLong(5));
+    void nextValue()
+    {
+        for (int i = 0; i < ncols; i++)
+        {
+            // Read value
+            if (in.readBit())
+            {
+                // else -> same value as before
+                if (in.readBit())
+                {
+                    // New leading and trailing zeros
+                    storedLeadingZeros[i] = in.get(5);
 
-    //                 byte significantBits = (byte)in.getLong(6);
-    //                 if (significantBits == 0)
-    //                 {
-    //                     significantBits = 64;
-    //                 }
-    //                 storedTrailingZeros.set(i, 64 - significantBits - storedLeadingZeros.get(i));
-    //             }
-    //             long value = in.getLong(64 - storedLeadingZeros.get(i) - storedTrailingZeros.get(i));
-    //             value <<= storedTrailingZeros.get(i);
-    //             value = storedVal.get(i) ^ value;
-    //             storedVal.set(i, value);
-    //         }
-    //     }
-    // }
+                    uint64_t significantBits = in.get(6);
+                    if (significantBits == 0)
+                    {
+                        significantBits = 64;
+                    }
+                    storedTrailingZeros[i] = 64 - significantBits - storedLeadingZeros[i];
+                }
+                uint64_t value = in.get(64 - storedLeadingZeros[i] - storedTrailingZeros[i]);
+                value <<= storedTrailingZeros[i];
 
-    // static long decodeZigZag32(final long n)
-    // {
-    //     return (n >>> 1) ^ -(n & 1);
-    // }
+                uint64_t *a = (uint64_t *)&storedVal[i];
+                uint64_t *b = (uint64_t *)&value;
+                uint64_t xor_ = *a ^ *b;
+                double *p = (double *)&xor_;
+                storedVal[i] = *p;
+            }
+        }
+    }
 };

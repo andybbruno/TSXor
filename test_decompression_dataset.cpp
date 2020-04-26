@@ -1,6 +1,7 @@
 #include <vector>
 #include <filesystem>
-#include "CompressorMulti.cpp"
+#include "CompressorMultiBitVector.cpp"
+// #include "CompressorMulti.cpp"
 #include "DecompressorMulti.cpp"
 #include "CSVReader.cpp"
 
@@ -9,7 +10,7 @@ int numLines = 0;
 int main(int argc, char *argv[])
 {
 
-    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/_DEBUG_Decompress.csv");
+    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/globalterrorism_UTC_UNIX.csv");
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);
@@ -33,7 +34,6 @@ int main(int argc, char *argv[])
         values.push_back(t);
     }
 
-    auto start = std::chrono::system_clock::now();
 
     CompressorMulti c(times[0]);
 
@@ -44,12 +44,14 @@ int main(int argc, char *argv[])
 
     c.close();
 
-    DecompressorMulti dm(&c.out, ncols);
+    auto start = std::chrono::system_clock::now();
+    DecompressorMulti dm(c.out, ncols);
 
     while (dm.hasNext())
     {
         PairMulti p = dm.readPair();
-        std::cout << p.toString() << std::endl;
+        // std::cout << p.toString() << std::endl;
+        // std::cout << dm.in << std::endl;
     }
 
     auto end = std::chrono::system_clock::now();

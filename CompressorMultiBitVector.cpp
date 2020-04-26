@@ -1,7 +1,7 @@
 #include <vector>
 #include <map>
 #include <string>
-#include "BitVector.cpp"
+#include "lib/BitVector.cpp"
 #include "lib/zigzag.hpp"
 
 #define DELTA_7_MASK 0x02 << 7;
@@ -35,11 +35,11 @@ inline uint32_t count_decimal(uint64_t v)
 
 struct CompressorMulti
 {
-    std::map<std::string, int> map;
-    int count_0 = 0;
-    int count_A = 0;
-    int count_B = 0;
-    uint8_t FIRST_DELTA_BITS = 14;
+    // std::map<std::string, int> map;
+    // int count_0 = 0;
+    // int count_A = 0;
+    // int count_B = 0;
+    uint8_t FIRST_DELTA_BITS = 32;
 
     std::vector<uint64_t> storedLeadingZeros;
     std::vector<uint64_t> storedTrailingZeros;
@@ -95,7 +95,8 @@ struct CompressorMulti
         out.append(storedDelta, FIRST_DELTA_BITS);
         for (double d : values)
         {
-            out.append(d, 64);
+            uint64_t *x = (uint64_t *)&d;
+            out.append(*x, 64);
         }
 
         storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
@@ -108,15 +109,11 @@ struct CompressorMulti
 
     void close()
     {
-        // These are selected to test interoperability and correctness of the solution,
-        // this can be read with go-tsz
-        out.append(0x0F, 4);
-        out.append(0xFFFFFFFF, 32);
-        out.push_back(0);
+        out.close();
 
-        map.insert(std::make_pair("count 0", count_0));
-        map.insert(std::make_pair("count A", count_A));
-        map.insert(std::make_pair("count B", count_B));
+        // map.insert(std::make_pair("count 0", count_0));
+        // map.insert(std::make_pair("count A", count_A));
+        // map.insert(std::make_pair("count B", count_B));
         // out.flush();
     }
 
@@ -131,8 +128,8 @@ struct CompressorMulti
     void compressTimestamp(long timestamp)
     {
         // a) Calculate the delta of delta
-        long newDelta = (timestamp - storedTimestamp);
-        long deltaD = newDelta - storedDelta;
+        int newDelta = (timestamp - storedTimestamp);
+        int deltaD = newDelta - storedDelta;
 
         if (deltaD == 0)
         {
@@ -173,6 +170,7 @@ struct CompressorMulti
                 // Append '1111'
                 out.append(0x0F, 4);
                 out.append(deltaD, 32);
+                // out.append(deltaD, 64);
                 break;
             }
         }
@@ -196,7 +194,7 @@ struct CompressorMulti
                 // Write 0
                 out.push_back(0);
 
-                count_0++;
+                // count_0++;
             }
             else
             {
@@ -230,15 +228,15 @@ struct CompressorMulti
                     std::string s2 = significantBits < 10 ? "0" + std::to_string(significantBits) : std::to_string(significantBits);
                     auto key = "A: " + s1 + " - " + s2;
 
-                    if (map.find(key) != map.end())
-                    {
-                        map[key] = map[key] + 1;
-                    }
-                    else
-                    {
-                        map.insert(std::make_pair(key, 1));
-                    }
-                    count_A++;
+                    // if (map.find(key) != map.end())
+                    // {
+                    //     map[key] = map[key] + 1;
+                    // }
+                    // else
+                    // {
+                    //     map.insert(std::make_pair(key, 1));
+                    // }
+                    // count_A++;
                 }
                 else
                 {
@@ -257,15 +255,15 @@ struct CompressorMulti
                     std::string s1 = dy < 10 ? "0" + std::to_string(dy) : std::to_string(dy);
                     std::string s2 = significantBits < 10 ? "0" + std::to_string(significantBits) : std::to_string(significantBits);
                     auto key = "B: " + s1 + " - " + s2;
-                    if (map.find(key) != map.end())
-                    {
-                        map[key] = map[key] + 1;
-                    }
-                    else
-                    {
-                        map.insert(std::make_pair(key, 1));
-                    }
-                    count_B++;
+                    // if (map.find(key) != map.end())
+                    // {
+                    //     map[key] = map[key] + 1;
+                    // }
+                    // else
+                    // {
+                    //     map.insert(std::make_pair(key, 1));
+                    // }
+                    // count_B++;
                 }
             }
             storedValues[i] = values[i];

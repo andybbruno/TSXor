@@ -1,16 +1,17 @@
-#include <boost/dynamic_bitset.hpp>
+// #include <boost/dynamic_bitset.hpp>
 #include <vector>
 struct bitset
 {
-    boost::dynamic_bitset<> set;
-    // std::vector<bool> set;
+    size_t pos = 0;
+    std::vector<bool> set;
 
     void writeBits(uint64_t value, size_t nbits)
     {
-        set.resize(set.size() + nbits);
+        auto s = set.size();
+        set.resize(s + nbits);
         for (size_t i = 1; i <= nbits; i++)
         {
-            set[set.size() - i] = value & 1;
+            set[s - i] = value & 1;
             value >>= 1;
         }
     }
@@ -23,5 +24,10 @@ struct bitset
     size_t size()
     {
         return set.size();
+    }
+
+    uint64_t get(size_t len)
+    {
+        return x;
     }
 };

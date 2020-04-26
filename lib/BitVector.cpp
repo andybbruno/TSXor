@@ -1,12 +1,12 @@
 #pragma once
-#include <vector>
-// #include <iostream>
+#include <deque>
+#include <iostream>
 // #include <boost/dynamic_bitset.hpp>
 
 class BitVector
 {
 private:
-    std::vector<uint64_t> data;
+    std::deque<uint64_t> data;
     uint64_t m_size = 0;
     uint64_t *curr_bucket;
     uint64_t curr_bits = 64;
@@ -16,15 +16,23 @@ private:
     bool rw = false;
 
 public:
-    void reserve(uint64_t n)
-    {
-        assert(!rw);
-        data.reserve(n);
-    }
+    // void reserve(uint64_t n)
+    // {
+    //     assert(!rw);
+    //     data.reserve(n);
+    // }
 
-    inline void append(uint64_t bits, uint64_t len)
+    void append(uint64_t bits, uint64_t len)
     {
+        // if (data.size() > 0)
+        // {
+        //     print();
+        // }
         assert(!rw);
+        if (!(len == 64 || (bits >> len) == 0))
+        {
+            std::cout << bits << " - " << len << std::endl;
+        }
         assert(len == 64 || (bits >> len) == 0);
 
         uint64_t curr_bucket_pos = m_size % 64;
@@ -65,16 +73,17 @@ public:
         // curr_bucket = &data.back();
     }
 
-    void close()
+    inline void close()
     {
         append(0x0F, 4);
-        append(0xFFFFFFFF, 32);
+        // append(UINT64_MAX, 64);
+        append(UINT32_MAX, 32);
         push_back(0);
         rw = true;
         curr_bucket = &data.front();
     }
 
-    void push_back(bool b)
+    inline void push_back(bool b)
     {
         assert(!rw);
         append(b, 1);
@@ -110,16 +119,43 @@ public:
         return out << "\n";
     }
 
+    void print()
+    {
+        std::bitset<64> tmp(data[0]);
+
+        for (int i = 0; i < (curr_bits); i++)
+        {
+            auto pos = 63 - i;
+            std::cout << tmp[pos];
+        }
+        for (int i = curr_bits; i < 64; i++)
+        {
+            std::cout << "#";
+        }
+        std::cout << "\n";
+        if (data.size() > 1)
+        {
+            for (int i = 1; i < data.size(); i++)
+            {
+                std::cout << std::bitset<64>(data[i]) << "\n";
+            }
+        }
+        std::cout << "\n";
+    }
+
     uint64_t get(uint64_t len)
     {
-        assert(rw);
-        assert(len <= 64);
-        assert(data.size() > 0);
+        // assert(rw);
+        // assert(len <= 64);
+        // assert(data.size() > 0);
+
+        // print();
 
         if (len == curr_bits)
         {
-            auto t_bits = *curr_bucket;
-            data.erase(data.begin());
+            auto t_bits = *curr_bucket >> (64 - len);
+            // data.erase(data.begin());
+            data.pop_front();
             curr_bucket = &data.front();
             curr_bits = 64;
             return t_bits;
@@ -135,17 +171,39 @@ public:
         {
             auto rest = len - curr_bits;
             auto t_bits = *curr_bucket;
-            data.erase(data.begin());
+            // data.erase(data.begin());
+            data.pop_front();
             curr_bucket = &data.front();
 
-            auto a = (t_bits >> (64 - len));
-            auto b = (*curr_bucket >> (64 - rest));
-            t_bits = a ^ b;
+            t_bits = (t_bits >> (64 - len)) ^ (*curr_bucket >> (64 - rest));
+
+            // auto a = (t_bits >> (64 - len));
+            // auto b = (*curr_bucket >> (64 - rest));
+            // t_bits = a ^ b;
 
             *curr_bucket <<= rest;
             curr_bits = 64 - rest;
             return t_bits;
         }
+    }
+
+    inline uint64_t nextZeroUntil(size_t len)
+    {
+        uint64_t t = get(1);
+        uint64_t res = t;
+        len--;
+        while ((t != 0) && (len > 0))
+        {
+            t = get(1);
+            res = (res << 1) ^ t;
+            len--;
+        }
+        return res;
+    }
+
+    inline bool readBit()
+    {
+        return (bool)get(1);
     }
 };
 
