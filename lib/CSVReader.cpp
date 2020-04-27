@@ -31,12 +31,13 @@ public:
 
     bool isEmpty()
     {
-        return inFile.eof();
+        getline(inFile, line);
+        return (line == "");
     }
 
     std::vector<double> nextLine()
     {
-        if (getline(inFile, line))
+        if (line != "")
         {
             std::vector<std::string> s;
             boost::algorithm::split(s, line, boost::is_any_of(delimeter));
@@ -55,7 +56,7 @@ public:
         else
         {
             inFile.close();
-            exit(EXIT_FAILURE);
+            exit;
         }
     }
 

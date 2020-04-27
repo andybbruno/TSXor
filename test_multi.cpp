@@ -9,14 +9,14 @@ int numLines = 0;
 int main(int argc, char *argv[])
 {
 
-    // CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/globalterrorism_UTC_UNIX.csv");
+    CSVReader reader("/Users/andrea/workspace/TimeSeries/csv/_DEBUG.csv");
 
-    if (argc < 2)
-    {
-        return 0;
-    }
+    // if (argc < 2)
+    // {
+    //     return 0;
+    // }
 
-    CSVReader reader(argv[1]);
+    // CSVReader reader(argv[1]);
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);
