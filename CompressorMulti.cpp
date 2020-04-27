@@ -1,25 +1,16 @@
 #include <vector>
 #include <map>
 #include <string>
-#include "succinct/bit_vector.hpp"
+#include "lib/BitStream.cpp"
 #include "lib/zigzag.hpp"
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
-inline uint32_t digits(uint64_t v)
-{
-    return 1 + (std::uint32_t)(v >= 10) + (std::uint32_t)(v >= 100) + (std::uint32_t)(v >= 1000) + (std::uint32_t)(v >= 10000) + (std::uint32_t)(v >= 100000) + (std::uint32_t)(v >= 1000000) + (std::uint32_t)(v >= 10000000) + (std::uint32_t)(v >= 100000000) + (std::uint32_t)(v >= 1000000000) + (std::uint32_t)(v >= 10000000000ull) + (std::uint32_t)(v >= 100000000000ull) + (std::uint32_t)(v >= 1000000000000ull) + (std::uint32_t)(v >= 10000000000000ull) + (std::uint32_t)(v >= 100000000000000ull) + (std::uint32_t)(v >= 1000000000000000ull) + (std::uint32_t)(v >= 10000000000000000ull) + (std::uint32_t)(v >= 100000000000000000ull) + (std::uint32_t)(v >= 1000000000000000000ull) + (std::uint32_t)(v >= 10000000000000000000ull);
-}
-
 struct CompressorMulti
 {
-    std::map<std::string, int> map;
-    int count_0 = 0;
-    int count_A = 0;
-    int count_B = 0;
-    uint8_t FIRST_DELTA_BITS = 14;
+    uint8_t FIRST_DELTA_BITS = 32;
 
     std::vector<uint64_t> storedLeadingZeros;
     std::vector<uint64_t> storedTrailingZeros;
@@ -28,9 +19,7 @@ struct CompressorMulti
     long storedDelta = 0;
     long blockTimestamp = 0;
 
-    succinct::bit_vector_builder out;
-
-    // We should have access to the series?
+    BitStream out;
 
     CompressorMulti(uint64_t timestamp)
     {
@@ -40,18 +29,8 @@ struct CompressorMulti
 
     void addHeader(uint64_t timestamp)
     {
-        // One byte: length of the first delta
-        // One byte: precision of timestamps
-        out.writeBits(timestamp, 64);
+        out.append(timestamp, 64);
     }
-
-    /**
-     * Adds a new uint64_t value to the series. Note, values must be inserted in order.
-     *
-     * @param timestamp Timestamp which is inside the allowed time block (default 24
-     *                  hours with millisecond precision)
-     * @param value     next floating point value in the series
-     */
 
     void addValue(uint64_t timestamp, std::vector<double> const &vals)
     {
@@ -72,48 +51,27 @@ struct CompressorMulti
         storedTimestamp = timestamp;
         storedValues = values;
 
-        out.writeBits(storedDelta, FIRST_DELTA_BITS);
+        out.append(storedDelta, FIRST_DELTA_BITS);
         for (double d : values)
         {
             uint64_t *x = (uint64_t *)&d;
-            out.writeBits(*x, 64);
+            out.append(*x, 64);
         }
 
         storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
         storedTrailingZeros = std::vector<uint64_t>(values.size(), 64);
     }
 
-    /**
-     * Closes the block and writes the remaining stuff to the BitOutput.
-     */
-
     void close()
     {
-        // These are selected to test interoperability and correctness of the solution,
-        // this can be read with go-tsz
-        out.writeBits(0x0F, 4);
-        out.writeBits(0xFFFFFFFF, 32);
-        out.skipBit();
-
-        map.insert(std::make_pair("count 0", count_0));
-        map.insert(std::make_pair("count A", count_A));
-        map.insert(std::make_pair("count B", count_B));
-        // out.flush();
+        out.close();
     }
 
-    /**
-     * Difference to the original Facebook paper, we store the first delta as 27
-     * bits to allow millisecond accuracy for a one day block.
-     *
-     * Also, the timestamp delta-delta is not good for millisecond compressions..
-     *
-     * @param timestamp epoch
-     */
     void compressTimestamp(long timestamp)
     {
         // a) Calculate the delta of delta
-        long newDelta = (timestamp - storedTimestamp);
-        long deltaD = newDelta - storedDelta;
+        int64_t newDelta = (timestamp - storedTimestamp);
+        int64_t deltaD = newDelta - storedDelta;
 
         if (deltaD == 0)
         {
@@ -122,7 +80,7 @@ struct CompressorMulti
         else
         {
             deltaD = zz::encode(deltaD);
-            auto length = 32 - __builtin_clz(deltaD);
+            auto length = 64 - __builtin_clzll(deltaD);
 
             switch (length)
             {
@@ -135,25 +93,26 @@ struct CompressorMulti
             case 7:
                 //DELTA_7_MASK adds '10' to deltaD
                 deltaD |= DELTA_7_MASK;
-                out.append_bits(deltaD, 9);
+                out.append(deltaD, 9);
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to deltaD
                 deltaD |= DELTA_9_MASK;
-                out.append_bits(deltaD, 12);
+                out.append(deltaD, 12);
                 break;
             case 10:
             case 11:
             case 12:
                 //DELTA_12_MASK adds '1110' to deltaD
                 deltaD |= DELTA_12_MASK;
-                out.append_bits(deltaD, 16);
+                out.append(deltaD, 16);
                 break;
             default:
                 // Append '1111'
-                out.append_bits(0x0F, 4);
-                out.append_bits(deltaD, 32);
+                out.append(0x0F, 4);
+                out.append(deltaD, 32);
+                // out.append(deltaD, 64);
                 break;
             }
         }
@@ -175,9 +134,7 @@ struct CompressorMulti
             if (xor_ == 0)
             {
                 // Write 0
-                out.skipBit();
-
-                count_0++;
+                out.push_back(0);
             }
             else
             {
@@ -197,56 +154,27 @@ struct CompressorMulti
                 }
 
                 // Store bit '1'
-                out.writeBit();
+                out.push_back(1);
 
                 if (leadingZeros >= storedLeadingZeros[i] && trailingZeros >= storedTrailingZeros[i])
                 {
-                    out.skipBit();
+                    out.push_back(0);
                     int significantBits = 64 - storedLeadingZeros[i] - storedTrailingZeros[i];
                     xor_ >>= storedTrailingZeros[i];
-                    out.writeBits(xor_, significantBits);
-
-                    auto dy = digits(y);
-                    std::string s1 = dy < 10 ? "0" + std::to_string(dy) : std::to_string(dy);
-                    std::string s2 = significantBits < 10 ? "0" + std::to_string(significantBits) : std::to_string(significantBits);
-                    auto key = "A: " + s1 + " - " + s2;
-
-                    if (map.find(key) != map.end())
-                    {
-                        map[key] = map[key] + 1;
-                    }
-                    else
-                    {
-                        map.insert(std::make_pair(key, 1));
-                    }
-                    count_A++;
+                    out.append(xor_, significantBits);
                 }
                 else
                 {
-                    out.writeBit();
-                    out.writeBits(leadingZeros, 5); // Number of leading zeros in the next 5 bits
+                    out.push_back(1);
+                    out.append(leadingZeros, 5); // Number of leading zeros in the next 5 bits
 
                     int significantBits = 64 - leadingZeros - trailingZeros;
-                    out.writeBits(significantBits, 6);
-                    xor_ >>= trailingZeros;               // Length of meaningful bits in the next 6 bits
-                    out.writeBits(xor_, significantBits); // Store the meaningful bits of XOR
+                    out.append(significantBits, 6);
+                    xor_ >>= trailingZeros;            // Length of meaningful bits in the next 6 bits
+                    out.append(xor_, significantBits); // Store the meaningful bits of XOR
 
                     storedLeadingZeros[i] = leadingZeros;
                     storedTrailingZeros[i] = trailingZeros;
-
-                    auto dy = digits(y);
-                    std::string s1 = dy < 10 ? "0" + std::to_string(dy) : std::to_string(dy);
-                    std::string s2 = significantBits < 10 ? "0" + std::to_string(significantBits) : std::to_string(significantBits);
-                    auto key = "B: " + s1 + " - " + s2;
-                    if (map.find(key) != map.end())
-                    {
-                        map[key] = map[key] + 1;
-                    }
-                    else
-                    {
-                        map.insert(std::make_pair(key, 1));
-                    }
-                    count_B++;
                 }
             }
             storedValues[i] = values[i];

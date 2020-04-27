@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include "lib/zigzag.hpp"
-// #include "lib/BitVector.cpp"
 #include "lib/BitStream.cpp"
 
 // struct PairMulti

@@ -31,7 +31,7 @@ public:
 
     bool isEmpty()
     {
-       return inFile.eof(); 
+        return inFile.eof();
     }
 
     std::vector<double> nextLine()
@@ -44,13 +44,33 @@ public:
             std::transform(s.begin(), s.end(), vec.begin(), [](const std::string &val) {
                 return (val != "") ? double(std::stod(val)) : nan("0");
             });
-            
+
             //PRE-PROCESSING
             //I dati che ho sono a distanza di un giorno
             //Con 14 bit usati da beringei non riesco a coprire il delta
             //Quindi divido per 100
             // vec[0] = vec[0] / 100;
             return vec;
+        }
+        else
+        {
+            inFile.close();
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    std::vector<std::string> nextLineString()
+    {
+        if (getline(inFile, line))
+        {
+            std::vector<std::string> s;
+            boost::algorithm::split(s, line, boost::is_any_of(delimeter));
+            // std::vector<double> vec(s.size());
+            // std::transform(s.begin(), s.end(), vec.begin(), [](const std::string &val) {
+            //     return (val != "") ? double(std::stod(val)) : nan("0");
+            // });
+
+            return s;
         }
         else
         {

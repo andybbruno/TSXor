@@ -2,22 +2,20 @@
 #include <filesystem>
 #include "CompressorMultiBitStream.cpp"
 // #include "CompressorMulti.cpp"
-#include "DecompressorMulti.cpp"
 #include "CSVReader.cpp"
 
 int numLines = 0;
 
 int main(int argc, char *argv[])
 {
+    // if (argc < 2)
+    // {
+    //     return 0;
+    // }
 
-    // CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/globalterrorism_UTC_UNIX.csv");
+    // CSVReader reader(argv[1]);
 
-    if (argc < 2)
-    {
-        return 0;
-    }
-
-    CSVReader reader(argv[1]);
+    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/globalterrorism_UTC_UNIX.csv");
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);
@@ -41,32 +39,18 @@ int main(int argc, char *argv[])
         values.push_back(t);
     }
 
-    CompressorMulti c(times[0]);
+    auto start = std::chrono::system_clock::now();
+
+    CompressorMultiBS c(0);
 
     for (int i = 0; i < nlines; i++)
     {
         c.addValue(times[i], values[i]);
     }
-
     c.close();
-
-    auto start = std::chrono::system_clock::now();
-    DecompressorMulti dm(c.out, ncols);
-
-    while (dm.hasNext())
-    {
-        // PairMulti p = dm.readPair();
-        // std::cout << p.toString() << std::endl;
-        // std::cout << dm.in << std::endl;
-    }
     auto end = std::chrono::system_clock::now();
     auto elapsed = (end - start);
     auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-
-    std::cout << dm.storedTimestamp << " - ";
-    for (auto x : dm.storedVal)
-        std::cout << x << " | ";
-    std::cout << std::endl;
 
     auto original_size = 64 * nlines * (ncols + 1);
     auto compressed_size = c.out.size();
@@ -87,5 +71,11 @@ int main(int argc, char *argv[])
     std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl;
     // std::cout << "Time Reduction:      \t" << ts_compression << "x" << std::endl;
     // std::cout << "Data Reduction: \t" << data_compression << "x" << std::endl;
+
+    // for (auto x : c.map)
+    // {
+    //     std::cout << x.first << " - " << x.second << std::endl;
+    // }
+
     return 0;
 }
