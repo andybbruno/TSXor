@@ -29,10 +29,10 @@ public:
         //     print();
         // }
         assert(!rw);
-        if (!(len == 64 || (bits >> len) == 0))
-        {
-            std::cout << bits << " - " << len << std::endl;
-        }
+        // if (!(len == 64 || (bits >> len) == 0))
+        // {
+        //     std::cout << bits << " - " << len << std::endl;
+        // }
         assert(len == 64 || (bits >> len) == 0);
 
         uint64_t curr_bucket_pos = m_size % 64;
@@ -75,9 +75,13 @@ public:
 
     inline void close()
     {
+        // append(0x0F, 4);
+        // // append(UINT64_MAX, 64);
+        // append(UINT32_MAX, 32);
+        // push_back(0);
         append(0x0F, 4);
-        // append(UINT64_MAX, 64);
-        append(UINT32_MAX, 32);
+        append(UINT64_MAX, 64);
+        append(UINT64_MAX, 64);
         push_back(0);
         rw = true;
         curr_bucket = &data.front();

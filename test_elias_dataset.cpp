@@ -13,8 +13,8 @@ int main(int argc, char *argv[])
     // }
 
     // CSVReader reader(argv[1]);
-    
-    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/globalterrorism_UTC_UNIX.csv");
+
+    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/Bari_full_UTC_UNIX.csv");
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
     auto start = std::chrono::system_clock::now();
 
-    CompressorMultiElias c(0);
+    CompressorMultiElias c(times[0] - 1);
 
     for (int i = 0; i < nlines; i++)
     {
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     std::cout << "Original size: \t\t" << original_size << " Bits" << std::endl;
     std::cout << "Compressed size: \t" << compressed_size << " Bits" << std::endl;
     std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl;
-    
+
     // std::cout << "Time Reduction:      \t" << ts_compression << "x" << std::endl;
     // std::cout << "Data Reduction: \t" << data_compression << "x" << std::endl;
 

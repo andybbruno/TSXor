@@ -3,10 +3,12 @@
 #include <math.h>
 #include <string>
 #include <iostream>
+#include <boost/lexical_cast.hpp>
+
 // #include "succinct/bit_vector.hpp"
 #include "lib/zigzag.hpp"
 #include "lib/elias.hpp"
-#include "lib/BitVector.hpp"
+#include "lib/BitStream.cpp"
 
 const auto &CONVERT = elias::gamma;
 
@@ -14,28 +16,12 @@ const auto &CONVERT = elias::gamma;
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
-inline uint32_t count_decimal(uint64_t v)
+size_t count_decimal(double x)
 {
-    return 1 +
-           (std::uint32_t)(v >= 10) +
-           (std::uint32_t)(v >= 100) +
-           (std::uint32_t)(v >= 1000) +
-           (std::uint32_t)(v >= 10000) +
-           (std::uint32_t)(v >= 100000) +
-           (std::uint32_t)(v >= 1000000) +
-           (std::uint32_t)(v >= 10000000) +
-           (std::uint32_t)(v >= 100000000) +
-           (std::uint32_t)(v >= 1000000000) +
-           (std::uint32_t)(v >= 10000000000ull) +
-           (std::uint32_t)(v >= 100000000000ull) +
-           (std::uint32_t)(v >= 1000000000000ull) +
-           (std::uint32_t)(v >= 10000000000000ull) +
-           (std::uint32_t)(v >= 100000000000000ull) +
-           (std::uint32_t)(v >= 1000000000000000ull) +
-           (std::uint32_t)(v >= 10000000000000000ull) +
-           (std::uint32_t)(v >= 100000000000000000ull) +
-           (std::uint32_t)(v >= 1000000000000000000ull) +
-           (std::uint32_t)(v >= 10000000000000000000ull);
+    // std::string s = boost::lexical_cast<std::string>(x);
+    std::string s = std::to_string(x);
+    size_t dec = s.substr(s.find(".") + 1).size();
+    return dec;
 }
 
 struct CompressorMultiElias
@@ -49,7 +35,7 @@ struct CompressorMultiElias
     long storedDelta = 0;
     long blockTimestamp = 0;
 
-    BitVector out;
+    BitStream out;
 
     // We should have access to the series?
 
@@ -95,7 +81,7 @@ struct CompressorMultiElias
 
         // non funziona se storedDelta == 0
         // out.append(storedDelta, FIRST_DELTA_BITS);
-        
+
         auto t = zz::encode(storedDelta);
         auto enc = CONVERT(t);
         out.append(enc.first, enc.second);
@@ -175,14 +161,12 @@ struct CompressorMultiElias
             else if (isnan(diff))
             {
                 // Write '10'
-                // out.push_back(1);
-                // out.push_back(0);
+                // out.append(0b10, 2);
             }
             else
             {
                 // Write '11'
-                out.push_back(1);
-                // out.push_back(1);
+                out.append(1, 1);
 
                 uint64_t int_part = zz::encode((int64_t)diff);
                 auto d_int = CONVERT(int_part);
@@ -192,13 +176,11 @@ struct CompressorMultiElias
                 auto d_dec = CONVERT(dec_part);
                 out.append(d_dec.first, d_dec.second);
 
-
                 // if ((d_int.second > 63) || ((d_int.first >> d_int.second) == 0))
                 // {
                 //     std::cout << diff << std::endl;
                 //     std::cout << d_int.first << " " << d_int.second << std::endl;
                 // }
-
 
                 // if ((d_dec.second > 63) || ((d_dec.first >> d_dec.second) == 0))
                 // {

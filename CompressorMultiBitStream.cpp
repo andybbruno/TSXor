@@ -1,7 +1,7 @@
 #include <vector>
 #include <map>
 #include <string>
-#include "lib/BitVector.cpp"
+#include "lib/BitStream.cpp"
 #include "lib/zigzag.hpp"
 
 #define DELTA_7_MASK 0x02 << 7;
@@ -48,7 +48,7 @@ struct CompressorMulti
     long storedDelta = 0;
     long blockTimestamp = 0;
 
-    BitVector out;
+    BitStream out;
 
     // We should have access to the series?
 
@@ -128,8 +128,8 @@ struct CompressorMulti
     void compressTimestamp(long timestamp)
     {
         // a) Calculate the delta of delta
-        int newDelta = (timestamp - storedTimestamp);
-        int deltaD = newDelta - storedDelta;
+        int64_t newDelta = (timestamp - storedTimestamp);
+        int64_t deltaD = newDelta - storedDelta;
 
         if (deltaD == 0)
         {
@@ -138,7 +138,7 @@ struct CompressorMulti
         else
         {
             deltaD = zz::encode(deltaD);
-            auto length = 32 - __builtin_clz(deltaD);
+            auto length = 64 - __builtin_clzll(deltaD);
 
             switch (length)
             {

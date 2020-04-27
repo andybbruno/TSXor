@@ -1,6 +1,6 @@
 #include <vector>
 #include <filesystem>
-#include "CompressorMultiBitVector.cpp"
+#include "CompressorMultiBitStream.cpp"
 // #include "CompressorMulti.cpp"
 #include "DecompressorMulti.cpp"
 #include "CSVReader.cpp"
@@ -10,7 +10,14 @@ int numLines = 0;
 int main(int argc, char *argv[])
 {
 
-    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/globalterrorism_UTC_UNIX.csv");
+    // CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/globalterrorism_UTC_UNIX.csv");
+
+    if (argc < 2)
+    {
+        return 0;
+    }
+
+    CSVReader reader(argv[1]);
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);
@@ -34,7 +41,6 @@ int main(int argc, char *argv[])
         values.push_back(t);
     }
 
-
     CompressorMulti c(times[0]);
 
     for (int i = 0; i < nlines; i++)
@@ -49,14 +55,18 @@ int main(int argc, char *argv[])
 
     while (dm.hasNext())
     {
-        PairMulti p = dm.readPair();
+        // PairMulti p = dm.readPair();
         // std::cout << p.toString() << std::endl;
         // std::cout << dm.in << std::endl;
     }
-
     auto end = std::chrono::system_clock::now();
     auto elapsed = (end - start);
     auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+
+    std::cout << dm.storedTimestamp << " - ";
+    for (auto x : dm.storedVal)
+        std::cout << x << " | ";
+    std::cout << std::endl;
 
     auto original_size = 64 * nlines * (ncols + 1);
     auto compressed_size = c.out.size();

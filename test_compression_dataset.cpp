@@ -1,19 +1,21 @@
 #include <vector>
 #include <filesystem>
-// #include "CompressorMultiBitVector.cpp"
-#include "CompressorMulti.cpp"
+#include "CompressorMultiBitStream.cpp"
+// #include "CompressorMulti.cpp"
 #include "CSVReader.cpp"
 
 int numLines = 0;
 
 int main(int argc, char *argv[])
 {
-    if (argc < 2)
-    {
-        return 0;
-    }
+    // if (argc < 2)
+    // {
+    //     return 0;
+    // }
 
-    CSVReader reader(argv[1]);
+    // CSVReader reader(argv[1]);
+
+    CSVReader reader("/Users/andrea/workspace/TimeSeries/dataset/globalterrorism_UTC_UNIX.csv");
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);

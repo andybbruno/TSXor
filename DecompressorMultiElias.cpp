@@ -1,6 +1,6 @@
 #include <vector>
 #include <string>
-#include "lib/BitVector.hpp"
+#include "lib/BitStream.cpp"
 #include "lib/zigzag.hpp"
 
 struct PairMulti
@@ -36,13 +36,13 @@ struct DecompressorMultiElias
 
     bool endOfStream = false;
 
-    BitVector in;
+    BitStream in;
     size_t in_size = 0;
     size_t curr_pos = 0;
 
     int ncols;
 
-    DecompressorMultiElias(BitVector const &input, int n)
+    DecompressorMultiElias(BitStream const &input, int n)
     {
         in = input;
         ncols = n;

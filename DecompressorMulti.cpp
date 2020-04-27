@@ -2,25 +2,26 @@
 #include <iostream>
 #include <string>
 #include "lib/zigzag.hpp"
-#include "lib/BitVector.cpp"
+// #include "lib/BitVector.cpp"
+#include "lib/BitStream.cpp"
 
-struct PairMulti
-{
-    long timestamp;
-    std::vector<double> value;
+// struct PairMulti
+// {
+//     long timestamp;
+//     std::vector<double> value;
 
-    PairMulti(uint64_t t, std::vector<double> const &v) : timestamp(t), value(v) {}
+//     PairMulti(uint64_t t, std::vector<double> const &v) : timestamp(t), value(v) {}
 
-    std::string toString()
-    {
-        std::string tmp = std::to_string(timestamp);
-        for (auto d : value)
-        {
-            tmp = tmp + " | " + std::to_string(d);
-        }
-        return tmp;
-    }
-};
+//     std::string toString()
+//     {
+//         std::string tmp = std::to_string(timestamp);
+//         for (auto d : value)
+//         {
+//             tmp = tmp + " | " + std::to_string(d);
+//         }
+//         return tmp;
+//     }
+// };
 
 struct DecompressorMulti
 {
@@ -36,10 +37,11 @@ struct DecompressorMulti
 
     bool endOfStream = false;
 
-    BitVector in;
+    // BitVector in;
+    BitStream in;
     uint64_t ncols;
 
-    DecompressorMulti(BitVector const &input, uint64_t n)
+    DecompressorMulti(BitStream const &input, uint64_t n)
     {
         in = input;
         ncols = n;
@@ -61,14 +63,14 @@ struct DecompressorMulti
      *
      * @return Pair if there's next value, null if series is done.
      */
-    PairMulti readPair()
-    {
-        // if (endOfStream)
-        // {
-        //     return null;
-        // }
-        return PairMulti(storedTimestamp, storedVal);
-    }
+    // PairMulti readPair()
+    // {
+    //     // if (endOfStream)
+    //     // {
+    //     //     return null;
+    //     // }
+    //     return PairMulti(storedTimestamp, storedVal);
+    // }
 
     bool hasNext()
     {
