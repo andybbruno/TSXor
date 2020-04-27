@@ -1,8 +1,8 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include "lib/zigzag.hpp"
-#include "lib/BitStream.cpp"
+#include "zigzag.hpp"
+#include "BitStream.cpp"
 
 // struct PairMulti
 // {

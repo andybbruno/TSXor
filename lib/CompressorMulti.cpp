@@ -1,8 +1,8 @@
 #include <vector>
 #include <map>
 #include <string>
-#include "lib/BitStream.cpp"
-#include "lib/zigzag.hpp"
+#include "BitStream.cpp"
+#include "zigzag.hpp"
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
@@ -121,7 +121,7 @@ struct CompressorMulti
         storedTimestamp = timestamp;
     }
 
-    void compressValue(std::vector<double> values)
+    void compressValue(std::vector<double> const &values)
     {
         for (int i = 0; i < values.size(); i++)
         {
@@ -165,11 +165,12 @@ struct CompressorMulti
                 }
                 else
                 {
-                    out.push_back(1);
-                    out.append(leadingZeros, 5); // Number of leading zeros in the next 5 bits
+                    // out.push_back(1);
+                    // out.append(leadingZeros, 5); // Number of leading zeros in the next 5 bits
 
                     int significantBits = 64 - leadingZeros - trailingZeros;
-                    out.append(significantBits, 6);
+
+                    out.append((((0x20 ^ leadingZeros) << 6) ^ (significantBits)), 12);
                     xor_ >>= trailingZeros;            // Length of meaningful bits in the next 6 bits
                     out.append(xor_, significantBits); // Store the meaningful bits of XOR
 
