@@ -56,7 +56,7 @@ public:
         else
         {
             inFile.close();
-            exit;
+            exit(EXIT_FAILURE);
         }
     }
 

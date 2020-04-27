@@ -9,19 +9,19 @@ int numLines = 0;
 int main(int argc, char *argv[])
 {
 
-    CSVReader reader("/Users/andrea/workspace/TimeSeries/csv/_DEBUG.csv");
+    // CSVReader reader("/Users/andrea/workspace/TimeSeries/csv/_DEBUG.csv");
 
-    // if (argc < 2)
-    // {
-    //     return 0;
-    // }
+    if (argc < 2)
+    {
+        return 0;
+    }
 
-    // CSVReader reader(argv[1]);
+    CSVReader reader(argv[1]);
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);
 
-    int nlines = 0;
+    uint64_t nlines = 0;
     std::vector<std::vector<double>> lines;
     while (!reader.isEmpty())
     {
@@ -58,7 +58,8 @@ int main(int argc, char *argv[])
     std::cout << std::fixed;
     std::cout << "*** COMPRESSION ***" << std::endl;
     std::cout << "Computed in:         \t" << ((double)msec / 1000) << " msec" << std::endl;
-    std::cout << "Throughput:          \t" << ((double)nlines / ((double)msec / 1000000)) / 1000000 << " M DataPoint/s" << std::endl;
+    std::cout << "Throughput 1:          \t" << ((double)nlines / ((double)msec / 1000000)) / 1000000 << " M Lines/s" << std::endl;
+    std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)msec / 1000000)) / 1000000 << " M Value/s" << std::endl;
     // std::cout << "Original size: \t\t" << original_size << " Bits" << std::endl;
     // std::cout << "Compressed size: \t" << compressed_size << " Bits" << std::endl;
     std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl
@@ -77,13 +78,17 @@ int main(int argc, char *argv[])
     msec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     std::cout << "*** DECOMPRESSION ***" << std::endl;
     std::cout << "Computed in:         \t" << ((double)msec / 1000) << " msec" << std::endl;
-    std::cout << "Throughput:          \t" << ((double)nlines / ((double)msec / 1000000)) / 1000000 << " M DataPoint/s" << std::endl
+    std::cout << "Throughput 1:          \t" << ((double)nlines / ((double)msec / 1000000)) / 1000000 << " M Lines/s" << std::endl;
+    std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)msec / 1000000)) / 1000000 << " M Value/s" << std::endl
               << std::endl;
 
-    std::cout << "*** LAST ROW ***" << std::endl;
-    std::cout << dm.storedTimestamp << " -> ";
-    for (auto x : dm.storedVal)
-        std::cout << x << "|";
-    std::cout << std::endl;
+
+    // std::cout.precision(6);
+    // std::cout << std::fixed;
+    // std::cout << "*** LAST ROW ***" << std::endl;
+    // std::cout << dm.storedTimestamp << " -> ";
+    // for (auto x : dm.storedVal)
+    //     std::cout << x << "|";
+    // std::cout << std::endl;
     return 0;
 }
