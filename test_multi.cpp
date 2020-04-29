@@ -83,12 +83,12 @@ int main(int argc, char *argv[])
               << std::endl;
 
 
-    // std::cout.precision(6);
-    // std::cout << std::fixed;
-    // std::cout << "*** LAST ROW ***" << std::endl;
-    // std::cout << dm.storedTimestamp << " -> ";
-    // for (auto x : dm.storedVal)
-    //     std::cout << x << "|";
-    // std::cout << std::endl;
+    std::cout.precision(6);
+    std::cout << std::fixed;
+    std::cout << "*** LAST ROW ***" << std::endl;
+    std::cout << dm.storedTimestamp << " -> ";
+    for (auto x : dm.storedVal)
+        std::cout << x << "|";
+    std::cout << std::endl;
     return 0;
 }

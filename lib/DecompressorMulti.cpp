@@ -106,7 +106,7 @@ struct DecompressorMulti
 
     uint64_t bitsToRead()
     {
-        uint64_t val = in.nextZeroUntil(4);
+        uint64_t val = in.nextZeroWithin(4);
         uint64_t toRead = 0;
 
         switch (val)
