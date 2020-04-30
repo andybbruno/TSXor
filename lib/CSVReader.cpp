@@ -32,7 +32,7 @@ public:
     bool isEmpty()
     {
         getline(inFile, line);
-        return (line == "");
+        return ((line == "") || (!inFile));
     }
 
     std::vector<double> nextLine()
@@ -78,5 +78,10 @@ public:
             inFile.close();
             exit(EXIT_FAILURE);
         }
+    }
+
+    ~CSVReader()
+    {
+        inFile.close();
     }
 };
