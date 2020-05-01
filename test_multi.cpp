@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     }
 
     CSVReader reader(argv[1]);
+    bool printAsCSV = argc > 2;
 
     // long lines = atoi(argv[1]);
     // int ncols = atoi(argv[2]);
@@ -56,18 +57,24 @@ int main(int argc, char *argv[])
     auto compressed_size = c.out.size();
     std::cout.precision(3);
     std::cout << std::fixed;
-    // std::cout << "*** COMPRESSION ***" << std::endl;
-    // std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
-    // std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
-    // std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl;
-    // // std::cout << "Original size: \t\t" << original_size << " Bits" << std::endl;
-    // // std::cout << "Compressed size: \t" << compressed_size << " Bits" << std::endl;
-    // std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl
-    //           << std::endl;
 
-    std::cout << ((double)microsec / 1000) << ","
-              << (double)nlines / ((double)microsec) << ","
-              << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << ",";
+    if (printAsCSV)
+    {
+        std::cout << ((double)microsec / 1000) << ","
+                  << (double)nlines / ((double)microsec) << ","
+                  << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << ",";
+    }
+    else
+    {
+        std::cout << "*** COMPRESSION ***" << std::endl;
+        std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
+        std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
+        std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl;
+        // std::cout << "Original size: \t\t" << original_size << " Bits" << std::endl;
+        // std::cout << "Compressed size: \t" << compressed_size << " Bits" << std::endl;
+        std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl
+                  << std::endl;
+    }
 
     auto start_dec = std::chrono::system_clock::now();
     DecompressorMulti dm(c.out, ncols);
@@ -80,22 +87,28 @@ int main(int argc, char *argv[])
     auto end_dec = std::chrono::system_clock::now();
     elapsed = (end_dec - start_dec);
     microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    // std::cout << "*** DECOMPRESSION ***" << std::endl;
-    // std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
-    // std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
-    // std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl
-    //           << std::endl;
 
-    std::cout << ((double)microsec / 1000) << ","
-              << (double)nlines / ((double)microsec) << ","
-              << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << std::endl;
+    if (printAsCSV)
+    {
+        std::cout << ((double)microsec / 1000) << ","
+                  << (double)nlines / ((double)microsec) << ","
+                  << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << std::endl;
+    }
+    else
+    { 
+        std::cout << "*** DECOMPRESSION ***" << std::endl;
+        std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
+        std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
+        std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl
+                  << std::endl;
 
-    // std::cout.precision(6);
-    // std::cout << std::fixed;
-    // std::cout << "*** LAST ROW ***" << std::endl;
-    // std::cout << dm.storedTimestamp << " -> ";
-    // for (auto x : dm.storedVal)
-    //     std::cout << x << "|";
-    // std::cout << std::endl;
+        std::cout.precision(6);
+        std::cout << std::fixed;
+        std::cout << "*** LAST ROW ***" << std::endl;
+        std::cout << dm.storedTimestamp << " -> ";
+        for (auto x : dm.storedVal)
+            std::cout << x << "|";
+        std::cout << std::endl;
+    }
     return 0;
 }
