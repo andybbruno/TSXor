@@ -10,6 +10,8 @@ struct DFCM
     DFCM(size_t log_size)
     {
         table_size = 1 << log_size;
+        dfcm_hash = 0;
+        lastValue = 0;
         table = std::vector<uint64_t>(table_size, 0);
     }
 

@@ -9,6 +9,7 @@ struct FCM
     FCM(size_t log_size)
     {
         table_size = 1 << log_size;
+        fcm_hash = 0;
         table = std::vector<uint64_t>(table_size, 0);
     }
 
