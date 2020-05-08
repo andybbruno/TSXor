@@ -1,7 +1,5 @@
 #include <vector>
 
-namespace predictors
-{
 struct DFCM
 {
     std::vector<uint64_t> table;
@@ -12,7 +10,7 @@ struct DFCM
     DFCM(size_t log_size)
     {
         table_size = 1 << log_size;
-        table = std::vector<uint64_t>(table_size);
+        table = std::vector<uint64_t>(table_size, 0);
     }
 
     uint64_t getPrediction()
@@ -27,4 +25,3 @@ struct DFCM
         lastValue = true_value;
     }
 };
-} // namespace predictors
