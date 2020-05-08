@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include "Predictors/dfcm.cpp"
 #include "Predictors/fcm.cpp"
@@ -14,6 +15,13 @@ public:
     {
         uint64_t bytes = zeros / 8;
         return (bytes == 8) ? (size_t)7 : bytes;
+    }
+
+    void head(double d)
+    {
+        uint64_t d_int = *((uint64_t *)&d);
+        fcm.update(d_int);
+        dfcm.update(d_int);
     }
 
     std::pair<uint64_t, uint64_t> encode(double d)
@@ -43,10 +51,25 @@ public:
         }
     }
 
-    void head(double d)
+    double decode(bool usefcm, uint64_t body)
     {
-        uint64_t d_int = *((uint64_t *)&d);
-        fcm.update(d_int);
-        dfcm.update(d_int);
+        uint64_t pred;
+
+        // 1xxx
+        if (usefcm)
+        {
+            pred = fcm.getPrediction();
+        }
+        // 0xxx
+        else
+        {
+            pred = dfcm.getPrediction();
+        }
+        auto actual = pred ^ body;
+        fcm.update(actual);
+        dfcm.update(actual);
+
+        double p = *((double *)&actual);
+        return p;
     }
 };

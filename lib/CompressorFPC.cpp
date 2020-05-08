@@ -59,7 +59,8 @@ struct CompressorFPC
         for (int i = 0; i < values.size(); i++)
         {
             fpc[i].head(values[i]);
-            out.append(values[i], 64);
+            uint64_t x = *((uint64_t *)&values[i]);
+            out.append(x, 64);
         }
     }
 
