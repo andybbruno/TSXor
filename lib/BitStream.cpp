@@ -19,6 +19,7 @@ private:
 public:
     void append(uint64_t bits, uint64_t len)
     {
+        // std::cout << bits << " ::: " << len << std::endl;
         assert(!closed);
         assert(len == 64 || (bits >> len) == 0);
 
@@ -71,7 +72,7 @@ public:
         assert(data.size() > 0);
 
         uint64_t t_bits = 0;
-        
+
         if (len == m_used_slots)
         {
             t_bits = *curr_bucket;
