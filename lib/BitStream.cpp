@@ -1,6 +1,7 @@
 #pragma once
 #include <deque>
 #include <iostream>
+#include <cassert>
 
 class BitStream
 {
