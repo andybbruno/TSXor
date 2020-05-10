@@ -2,6 +2,8 @@
 #include <deque>
 #include <iostream>
 #include <cassert>
+#include <fstream>
+
 
 class BitStream
 {
@@ -121,6 +123,14 @@ public:
     inline bool readBit()
     {
         return (bool)get(1);
+    }
+
+    void saveToFile()
+    {
+        std::ios_base::sync_with_stdio(false);
+        auto myfile = std::fstream("file.binary", std::ios::out | std::ios::binary);
+        myfile.write((char *)&data[0], data.size() * sizeof(uint64_t));
+        myfile.close();
     }
 };
 
