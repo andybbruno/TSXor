@@ -3,6 +3,9 @@
 #include <deque>
 #include <algorithm>
 
+#define NO_SHARED_BYTES_MASK 0x77
+#define SHARED_BYTES_MASK 0x88
+
 class HDP
 {
 public:
@@ -28,7 +31,18 @@ public:
             trailingZerosBytes = __builtin_clzll(xor_) / 8;
         }
 
-        uint64_t zeros = (leadingZerosBytes << 4) | trailingZerosBytes;
+        uint64_t zeros = SHARED_BYTES_MASK;
+
+        if ((leadingZerosBytes > 0) || (trailingZerosBytes > 0))
+        {
+            zeros |= (leadingZerosBytes << 4);
+            zeros |= trailingZerosBytes;
+        }
+        else
+        {
+            zeros = NO_SHARED_BYTES_MASK;
+        }
+        
 
         return std::pair(zeros, xor_);
     }
@@ -42,7 +56,7 @@ public:
     // }
 
 private:
-    uint64_t getBestPrediction(uint64_t true_value)
+    inline uint64_t getBestPrediction(uint64_t true_value)
     {
 
         int leadingZerosBytes = 0;
@@ -74,35 +88,6 @@ private:
         update(true_value, bucket);
         return 0;
     }
-
-    // inline uint64_t getBestPrediction(uint64_t true_value)
-    // {
-    //     auto popcount = __builtin_popcountll(true_value);
-
-    //     // if current bucket not empty
-    //     if (table[popcount].size() > 0)
-    //     {
-    //         std::vector<uint64_t> res(table[popcount].size());
-    //         for (int i = 0; i < table[popcount].size(); i++)
-    //         {
-    //             auto xor_ = table[popcount][i] ^ true_value;
-    //             int leadingZerosBytes = safeLeadingZerosBytes(xor_);
-    //             int trailingZerosBytes = safeTrailingZerosBytes(xor_);
-    //             res[i] = leadingZerosBytes + trailingZerosBytes;
-    //         }
-    //         auto maxidx = std::distance(res.begin(), std::max_element(res.begin(), res.end()));
-
-    //         update(true_value, popcount);
-
-    //         return table[popcount][maxidx];
-    //     }
-    //     //for i da popcount +/- threshold
-    //     // else
-    //     // {
-    //     // }
-
-    //     return 0;
-    // }
 
     inline void update(uint64_t val, int bucket)
     {

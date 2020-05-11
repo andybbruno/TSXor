@@ -11,7 +11,7 @@
 
 struct CompressorHDP
 {
-    HDP hdp;
+    std::vector<HDP> hdp;
     bool first_append = true;
     uint8_t FIRST_DELTA_BITS = 32;
 
@@ -39,7 +39,7 @@ struct CompressorHDP
     {
         if (first_append)
         {
-            // hdp = std::vector<HDP>(vals.size());
+            hdp = std::vector<HDP>(vals.size());
             first_append = false;
             writeFirst(timestamp, vals);
         }
@@ -126,11 +126,15 @@ struct CompressorHDP
     {
         for (int i = 0; i < values.size(); i++)
         {
-            auto code = hdp.encode(values[i]);
+            auto code = hdp[i].encode(values[i]);
             // std::cout << "A: " << code.first << "\t\t\t";
             out.append(code.first, 8);
 
-            if (code.first > 0)
+            if (code.first == NO_SHARED_BYTES_MASK)
+            {
+                out.append(code.second, 64);
+            }
+            else if (code.first > 0)
             {
                 auto lead_zeros = 8 * (code.first >> 4);
                 auto trail_zeros = 8 * (code.first & (~((UINT64_MAX << 4))));
