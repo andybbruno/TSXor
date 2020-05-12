@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include "BitStream.cpp"
+#include "ByteStream.cpp"
 #include "zigzag.hpp"
 #include "HDP/hdp.cpp"
 
@@ -27,7 +28,8 @@ struct CompressorHDP
     long storedDelta = 0;
     long blockTimestamp = 0;
 
-    BitStream out;
+    BitStream bit_stream;
+    ByteStream byte_stream;
 
     CompressorHDP(uint64_t timestamp)
     {
@@ -37,7 +39,7 @@ struct CompressorHDP
 
     void addHeader(uint64_t timestamp)
     {
-        out.append(timestamp, 64);
+        bit_stream.append(timestamp, 64);
     }
 
     void addValue(uint64_t timestamp, std::vector<double> const &vals)
@@ -59,18 +61,19 @@ struct CompressorHDP
     {
         storedDelta = timestamp - blockTimestamp;
         storedTimestamp = timestamp;
-        out.append(storedDelta, FIRST_DELTA_BITS);
+        bit_stream.append(storedDelta, FIRST_DELTA_BITS);
 
         for (int i = 0; i < values.size(); i++)
         {
             uint64_t x = *((uint64_t *)&values[i]);
-            out.append(x, 64);
+            bit_stream.append(x, 64);
         }
     }
 
     void close()
     {
-        out.close();
+        bit_stream.close();
+        byte_stream.close();
     }
 
     void compressTimestamp(long timestamp)
@@ -81,7 +84,7 @@ struct CompressorHDP
 
         if (deltaD == 0)
         {
-            out.push_back(0);
+            bit_stream.push_back(0);
         }
         else
         {
@@ -99,25 +102,25 @@ struct CompressorHDP
             case 7:
                 //DELTA_7_MASK adds '10' to deltaD
                 deltaD |= DELTA_7_MASK;
-                out.append(deltaD, 9);
+                bit_stream.append(deltaD, 9);
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to deltaD
                 deltaD |= DELTA_9_MASK;
-                out.append(deltaD, 12);
+                bit_stream.append(deltaD, 12);
                 break;
             case 10:
             case 11:
             case 12:
                 //DELTA_12_MASK adds '1110' to deltaD
                 deltaD |= DELTA_12_MASK;
-                out.append(deltaD, 16);
+                bit_stream.append(deltaD, 16);
                 break;
             default:
                 // Append '1111'
-                out.append(0x0F, 4);
-                out.append(deltaD, 32);
+                bit_stream.append(0x0F, 4);
+                bit_stream.append(deltaD, 32);
                 // out.append(deltaD, 64);
                 break;
             }
@@ -134,11 +137,11 @@ struct CompressorHDP
             counter0++;
             auto code = hdp[i].encode(values[i]);
             // std::cout << "A: " << code.first << "\t\t\t";
-            out.append(code.first, 8);
+            byte_stream.append(code.first);
 
             if (code.first == NO_SHARED_BYTES_MASK)
             {
-                out.append(code.second, 64);
+                byte_stream.append(code.second, 64);
                 counter3++;
             }
             else if (code.first > 0x7f)
@@ -149,7 +152,7 @@ struct CompressorHDP
                 auto len = 64 - lead_zeros - trail_zeros;
                 code.second >>= trail_zeros;
                 // std::cout << "B: " << code.second << " : " << len << std::endl;
-                out.append(code.second, len);
+                byte_stream.append(code.second, len);
                 counter2++;
             }
             else

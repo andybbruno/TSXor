@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     auto elapsed = (end_compr - start_compr);
     auto microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     auto original_size = 64 * nlines * (ncols + 1);
-    auto compressed_size = c.out.size();
+    auto compressed_size = c.bit_stream.size() + c.byte_stream.size();
     std::cout.precision(3);
     std::cout << std::fixed;
 
