@@ -10,7 +10,8 @@ int main(int argc, char *argv[])
 {
 
     // CSVReader reader("/Users/andrea/workspace/TimeSeries/csv/_DEBUG.csv");
-    // CSVReader reader("csv/NewYork_UTC_UNIX.csv");
+    // CSVReader reader("dataset/OXFORD/manrealizedvolatilityindices_UTC_UNIX_lbl.csv");
+    // CSVReader reader("csv/test_2COLS_100K.csv");
 
     if (argc < 2)
     {
@@ -111,6 +112,10 @@ int main(int argc, char *argv[])
     //         std::cout << x << "|";
     //     std::cout << std::endl;
     // }
+
+    std::cout << ((double)c.counter1 / c.counter0) * 100 << std::endl;
+    std::cout << ((double)c.counter2 / c.counter0) * 100 << std::endl;
+    std::cout << ((double)c.counter3 / c.counter0) * 100 << std::endl;
 
     return 0;
 }

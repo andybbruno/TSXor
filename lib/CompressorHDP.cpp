@@ -11,6 +11,11 @@
 
 struct CompressorHDP
 {
+    uint64_t counter0 = 0;
+    uint64_t counter1 = 0;
+    uint64_t counter2 = 0;
+    uint64_t counter3 = 0;
+
     std::vector<HDP> hdp;
     bool first_append = true;
     uint8_t FIRST_DELTA_BITS = 32;
@@ -126,6 +131,7 @@ struct CompressorHDP
     {
         for (int i = 0; i < values.size(); i++)
         {
+            counter0++;
             auto code = hdp[i].encode(values[i]);
             // std::cout << "A: " << code.first << "\t\t\t";
             out.append(code.first, 8);
@@ -133,21 +139,23 @@ struct CompressorHDP
             if (code.first == NO_SHARED_BYTES_MASK)
             {
                 out.append(code.second, 64);
+                counter3++;
             }
-            else if (code.first > 0)
+            else if (code.first > 0x7f)
             {
-                auto lead_zeros = 8 * (code.first >> 4);
-                auto trail_zeros = 8 * (code.first & (~((UINT64_MAX << 4))));
+                auto lead_zeros = 8 * ((code.first >> 4) & (~((UINT64_MAX << 3))));
+                auto trail_zeros = 8 * ((code.first & (~((UINT64_MAX << 3)))));
 
                 auto len = 64 - lead_zeros - trail_zeros;
                 code.second >>= trail_zeros;
                 // std::cout << "B: " << code.second << " : " << len << std::endl;
                 out.append(code.second, len);
+                counter2++;
             }
-            // else
-            // {
-            //     std::cout << std::endl;
-            // }
+            else
+            {
+                counter1++;
+            }
         }
     }
 };

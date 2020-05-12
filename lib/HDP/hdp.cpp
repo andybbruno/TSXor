@@ -3,17 +3,19 @@
 #include <deque>
 #include <algorithm>
 
-#define NO_SHARED_BYTES_MASK 0x77
 #define SHARED_BYTES_MASK 0x88
+#define NO_SHARED_BYTES_MASK 0x80
 
 class HDP
 {
 public:
     std::vector<std::deque<uint64_t>> table;
+    std::deque<uint64_t> memory;
 
     HDP()
     {
         table = std::vector<std::deque<uint64_t>>(8, std::deque<uint64_t>(1, 0));
+        memory = std::deque<uint64_t>(128, 0);
     }
 
     std::pair<uint64_t, uint64_t> encode(double d)
@@ -30,6 +32,12 @@ public:
             leadingZerosBytes = __builtin_clzll(xor_) / 8;
             trailingZerosBytes = __builtin_clzll(xor_) / 8;
         }
+        else
+        {
+            int index = std::distance(memory.begin(), std::find(memory.begin(), memory.end(), d_int));
+            updateMemory(d_int);
+            return std::pair(index, 0);
+        }
 
         uint64_t zeros = SHARED_BYTES_MASK;
 
@@ -42,13 +50,13 @@ public:
         {
             zeros = NO_SHARED_BYTES_MASK;
         }
-        
-
+        updateMemory(d_int);
         return std::pair(zeros, xor_);
     }
 
     // double decode(bool usefcm, uint64_t body)
     // {
+
     // }
 
     // void head(double d)
@@ -58,7 +66,6 @@ public:
 private:
     inline uint64_t getBestPrediction(uint64_t true_value)
     {
-
         int leadingZerosBytes = 0;
         int trailingZerosBytes = 0;
 
@@ -70,6 +77,8 @@ private:
 
         auto bucket = leadingZerosBytes + trailingZerosBytes;
 
+        uint64_t result = 0;
+
         // if current bucket not empty
         if (table[bucket].size() > 0)
         {
@@ -77,24 +86,32 @@ private:
             for (int i = 0; i < table[bucket].size(); i++)
             {
                 auto tmp_xor = table[bucket][i] ^ true_value;
-                res[i] = (__builtin_popcountll(tmp_xor)) / 8;
+                
+                // LOOK HERE!
+                // res[i] = (__builtin_popcountll(tmp_xor)) / 8;
+                res[i] = (__builtin_popcountll(tmp_xor));
             }
             auto minidx = std::distance(res.begin(), std::min_element(res.begin(), res.end()));
-
-            update(true_value, bucket);
-            return table[bucket][minidx];
+            result = table[bucket][minidx];
         }
 
-        update(true_value, bucket);
-        return 0;
+        updateTable(true_value, bucket);
+        return result;
     }
 
-    inline void update(uint64_t val, int bucket)
+    inline void updateTable(uint64_t val, int bucket)
     {
-        if (table[bucket].size() > 15)
+        // LOOK HERE!
+        if (table[bucket].size() > 7)
         {
             table[bucket].pop_back();
         }
         table[bucket].push_front(val);
+    }
+
+    inline void updateMemory(uint64_t val)
+    {
+        memory.pop_back();
+        memory.push_front(val);
     }
 };
