@@ -1,6 +1,8 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <sstream>
+#include <iostream>
 #include "BitStream.cpp"
 #include "Cache.cpp"
 #include "zigzag.hpp"
@@ -9,7 +11,7 @@
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
-struct CompressorCache
+struct CompressorXorCache
 {
     std::vector<Cache<uint64_t>> cache;
 
@@ -18,9 +20,10 @@ struct CompressorCache
     std::vector<uint64_t> DEBUG___;
     std::vector<uint64_t> DEBUG2___;
 
-    std::vector<uint64_t> storedLeadingZeros;
-    std::vector<uint64_t> storedTrailingZeros;
-    std::vector<double> storedValues;
+    // std::vector<uint64_t> storedLeadingZeros;
+    // std::vector<uint64_t> storedTrailingZeros;
+    // std::vector<double> storedValues;
+
     long storedTimestamp = 0;
     long storedDelta = 0;
     long blockTimestamp = 0;
@@ -30,10 +33,12 @@ struct CompressorCache
     uint countC = 0;
 
     BitStream out;
+    std::deque<uint8_t> bytes;
 
-    CompressorCache(uint64_t timestamp)
+    CompressorXorCache(uint64_t timestamp)
     {
         blockTimestamp = timestamp;
+        // stream = std::stringstream();
         addHeader(timestamp);
     }
 
@@ -46,8 +51,8 @@ struct CompressorCache
     {
         if (storedTimestamp == 0)
         {
-            writeFirst(timestamp, vals);
             cache = std::vector<Cache<uint64_t>>(vals.size());
+            writeFirst(timestamp, vals);
         }
         else
         {
@@ -60,17 +65,20 @@ struct CompressorCache
     {
         storedDelta = timestamp - blockTimestamp;
         storedTimestamp = timestamp;
-        storedValues = values;
+        // storedValues = values;
 
         out.append(storedDelta, FIRST_DELTA_BITS);
-        for (double d : values)
+        for (int i = 0; i < values.size(); i++)
         {
-            uint64_t *x = (uint64_t *)&d;
-            out.append(*x, 64);
+            uint64_t x = *((uint64_t *)&(values[i]));
+            // out.append(*x, 64);
+
+            append64(x);
+            cache[i].insert(x);
         }
 
-        storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
-        storedTrailingZeros = std::vector<uint64_t>(values.size(), 64);
+        // storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
+        // storedTrailingZeros = std::vector<uint64_t>(values.size(), 64);
     }
 
     void close()
@@ -142,65 +150,97 @@ struct CompressorCache
             {
                 auto offset = cache[i].getIndexOf(val);
 
-                // Write 0
-                out.push_back(0);
+                // // Write 0
+                // out.push_back(0);
 
-                //Write offset
-                out.append(offset, 7);
+                // //Write offset
+                // out.append(offset, 7);
+
+                uint8_t *bytes = (uint8_t *)&offset;
+                append8(bytes[0]);
 
                 countA++;
             }
+            // else if (cache[i].containsCandidate(val))
             else
             {
-                uint64_t last_val = *((uint64_t *)&storedValues[i]);
-                uint64_t xor_ = val ^ last_val;
+                uint64_t candidate = cache[i].getCandidate(val);
 
-                int leadingZeros = __builtin_clzll(xor_);
-                int trailingZeros = __builtin_ctzll(xor_);
+                uint64_t xor_ = candidate ^ val;
 
-                // Check overflow of leading? Can't be 32!
-                if (leadingZeros >= 32)
+                int lead_zeros_bytes = (__builtin_clzll(xor_) / 8);
+                int trail_zeros_bytes = (__builtin_ctzll(xor_) / 8);
+
+                if ((lead_zeros_bytes + trail_zeros_bytes) > 1)
                 {
-                    leadingZeros = 31;
-                }
+                    auto offset = cache[i].getIndexOf(candidate);
 
-                if (leadingZeros == trailingZeros)
-                {
-                    xor_ = xor_ >> 1 << 1;
-                    trailingZeros = 1;
-                }
+                    // // Write 1
+                    // out.push_back(1);
+                    // //Write offset
+                    // out.append(offset, 7);
 
-                // Store bit '1'
-                out.push_back(1);
+                    //WRITE 1
+                    offset |= 0x80;
+                    uint8_t *bytes = (uint8_t *)&offset;
+                    append8(bytes[0]);
 
-                if (leadingZeros >= storedLeadingZeros[i] && trailingZeros >= storedTrailingZeros[i])
-                {
-                    out.push_back(0);
-                    int significantBits = 64 - storedLeadingZeros[i] - storedTrailingZeros[i];
-                    xor_ >>= storedTrailingZeros[i];
-                    out.append(xor_, significantBits);
+                    auto xor_len_bytes = 8 - lead_zeros_bytes - trail_zeros_bytes;
+                    xor_ >>= (trail_zeros_bytes * 8);
+
+                    // out.append(trail_zeros_bytes, 4);
+                    // out.append(xor_len_bytes, 4);
+                    // out.append(xor_, (8 * xor_len_bytes));
+
+                    uint8_t head = (trail_zeros_bytes << 4) | xor_len_bytes;
+                    append8(head);
+
+                    uint8_t *xor_bytes = (uint8_t *)&xor_;
+                    for (int i = (xor_len_bytes - 1); i >= 0; i--)
+                    {
+                        append8(xor_bytes[i]);
+                    }
+
                     countB++;
-                    DEBUG___.push_back(significantBits);
                 }
                 else
                 {
-                    // out.push_back(1);
-                    // out.append(leadingZeros, 5); // Number of leading zeros in the next 5 bits
+                    // out.append(255, 8);
+                    // out.append(val, 64);
 
-                    int significantBits = 64 - leadingZeros - trailingZeros;
+                    append8((uint8_t)255);
+                    append64(val);
 
-                    out.append((((0x20 ^ leadingZeros) << 6) ^ (significantBits)), 12);
-                    xor_ >>= trailingZeros;            // Length of meaningful bits in the next 6 bits
-                    out.append(xor_, significantBits); // Store the meaningful bits of XOR
-
-                    storedLeadingZeros[i] = leadingZeros;
-                    storedTrailingZeros[i] = trailingZeros;
                     countC++;
-                    DEBUG2___.push_back(12 + significantBits);
                 }
             }
-            cache[i].insert(val);
-            storedValues[i] = values[i];
+
+            // else
+            // {
+            //     out.append(255, 8);
+            //     out.append(val, 64);
+            //     countC++;
+            // }
         }
+
+        for (int i = 0; i < values.size(); i++)
+        {
+            uint64_t val = *((uint64_t *)&values[i]);
+            cache[i].insert(val);
+        }
+    }
+
+    inline void append64(uint64_t x)
+    {
+        uint8_t *b = (uint8_t *)&x;
+        for (int i = 7; i >= 0; i--)
+        {
+            bytes.push_back(b[i]);
+        }
+    }
+
+    inline void append8(uint8_t x)
+    {
+        bytes.push_back(x);
     }
 };

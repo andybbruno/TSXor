@@ -1,8 +1,8 @@
 #include <vector>
 #include <filesystem>
 #include <numeric>
-#include "lib/CompressorCache.cpp"
-#include "lib/DecompressorCache.cpp"
+#include "lib/CompressorXorCache.cpp"
+#include "lib/DecompressorXorCache.cpp"
 #include "lib/CSVReader.cpp"
 
 int numLines = 0;
@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
 {
 
     // CSVReader reader("csv/test_2COLS_100K.csv");
+    // CSVReader reader("csv/_DEBUG.csv");
 
     if (argc < 2)
     {
@@ -44,7 +45,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_compr = std::chrono::system_clock::now();
-    CompressorCache c(times[0]);
+    CompressorXorCache c(times[0]);
     for (int i = 0; i < nlines; i++)
     {
         c.addValue(times[i], values[i]);
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
     auto elapsed = (end_compr - start_compr);
     auto microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     auto original_size = 64 * nlines * (ncols + 1);
-    auto compressed_size = c.out.size();
+    auto compressed_size = c.out.size() + (c.bytes.size() * 8);
     std::cout.precision(3);
     std::cout << std::fixed;
 
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_dec = std::chrono::system_clock::now();
-    DecompressorCache dm(c.out, ncols);
+    DecompressorXorCache dm(c.out, c.bytes, ncols);
     while (dm.hasNext())
     {
     }
@@ -110,15 +111,10 @@ int main(int argc, char *argv[])
         std::cout << std::endl;
     }
 
-    auto average = std::accumulate(c.DEBUG___.begin(), c.DEBUG___.end(), 0.0) / c.DEBUG___.size();
-    auto average2 = std::accumulate(c.DEBUG2___.begin(), c.DEBUG2___.end(), 0.0) / c.DEBUG2___.size();
-
-    std::cout << std::endl;
-    std::cout << average << std::endl;
-    std::cout << average2 << std::endl;
-    std::cout << std::endl;
-    std::cout << c.countA << std::endl;
-    std::cout << c.countB << std::endl;
-    std::cout << c.countC << std::endl;
+    std::cout.precision(2);
+    std::cout << std::fixed;
+    std::cout << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
+    std::cout << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
+    std::cout << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
     return 0;
 }

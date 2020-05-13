@@ -1,11 +1,12 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <iostream>
 #include "zigzag.hpp"
 #include "BitStream.cpp"
-#include "Cache.cpp"
 
-struct DecompressorCache
+struct DecompressorXorCache
 {
     std::vector<Cache<uint64_t>> cache;
 
@@ -22,17 +23,20 @@ struct DecompressorCache
 
     // BitVector in;
     BitStream in;
+    std::deque<uint8_t> bytes;
     uint64_t ncols;
 
-    DecompressorCache(BitStream const &input, uint64_t n)
+    DecompressorXorCache(BitStream &input, std::deque<uint8_t> &bts, uint64_t n)
     {
         in = input;
         ncols = n;
+        bytes = bts;
 
         storedLeadingZeros = std::vector<uint64_t>(ncols, 0);
         storedTrailingZeros = std::vector<uint64_t>(ncols, 0);
         storedVal = std::vector<double>(ncols, 0);
         cache = std::vector<Cache<uint64_t>>(ncols);
+
         readHeader();
     }
 
@@ -43,12 +47,6 @@ struct DecompressorCache
 
     bool hasNext()
     {
-        // for (auto x : storedVal)
-        // {
-        //     std::cout << x << "|";
-        // }
-        // std::cout << std::endl;
-
         next();
         return !endOfStream;
     }
@@ -67,10 +65,10 @@ struct DecompressorCache
             }
             for (int i = 0; i < ncols; i++)
             {
-                uint64_t read = in.get(64);
+                uint64_t read = readBytes(8);
                 cache[i].insert(read);
-                double *p = (double *)&read;
-                storedVal[i] = *p;
+                double p = (*(double *)&read);
+                storedVal[i] = p;
             }
             storedTimestamp = blockTimestamp + storedDelta;
         }
@@ -140,42 +138,45 @@ struct DecompressorCache
     {
         for (int i = 0; i < ncols; i++)
         {
-            // Read value
-            if (in.readBit())
+            uint64_t head = readBytes(1);
+            uint64_t final_val = 0;
+
+            if (head < 128)
             {
-                // else -> same value as before
-                if (in.readBit())
-                {
-                    // New leading and trailing zeros
-                    storedLeadingZeros[i] = in.get(5);
-
-                    uint64_t significantBits = in.get(6);
-                    if (significantBits == 0)
-                    {
-                        significantBits = 64;
-                    }
-                    storedTrailingZeros[i] = 64 - significantBits - storedLeadingZeros[i];
-                }
-                uint64_t value = in.get(64 - storedLeadingZeros[i] - storedTrailingZeros[i]);
-                value <<= storedTrailingZeros[i];
-
-                auto lastVal = cache[i].getLast();
-                
-                uint64_t *a = (uint64_t *)&lastVal;
-                uint64_t *b = (uint64_t *)&value;
-                uint64_t xor_ = *a ^ *b;
-                double *p = (double *)&xor_;
-                storedVal[i] = *p;
-                cache[i].insert(xor_);
+                final_val = cache[i].get(head);
             }
-            // if the first bit is 0
+            else if (head == 255)
+            {
+                final_val = readBytes(8);
+            }
             else
             {
-                auto offset = in.get(7);
-                auto val = cache[i].get(offset);
-                storedVal[i] = *((double *)&val);
-                cache[i].insert(val);
+                uint64_t offset = head & (~((UINT64_MAX << 7)));
+                uint64_t info = readBytes(1);
+                uint64_t trail_zeros_bytes = info >> 4;
+                uint64_t xor_bytes = info & (~((UINT64_MAX << 4)));
+                uint64_t lead_zeros_bytes = 8 - xor_bytes - trail_zeros_bytes;
+                uint64_t xor_ = readBytes(xor_bytes) << (8 * trail_zeros_bytes);
+                final_val = xor_ ^ cache[i].get(offset);
+            }
+            cache[i].insert(final_val);
+            double p = (*(double *)&final_val);
+            storedVal[i] = p;
+        }
+    }
+
+    inline uint64_t readBytes(size_t len)
+    {
+        uint64_t val = 0;
+        for (int i = 0; i < len; i++)
+        {
+            val |= bytes.front();
+            bytes.pop_front();
+            if (i != (len - 1))
+            {
+                val <<= 8;
             }
         }
+        return val;
     }
 };

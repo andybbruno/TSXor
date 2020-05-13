@@ -1,0 +1,65 @@
+ 🔥  TimeSeries   master  ./test_cache.o dataset/OXFORD/manrealizedvolatilityindices_UTC_UNIX_lbl.csv
+*** COMPRESSION ***
+Computed in:            2634.989 msec
+Throughput 1:           0.054 M Lines/s
+Throughput 2:           1.088 M Value/s
+Reduction size:         1.280x
+
+*** DECOMPRESSION ***
+Computed in:            2145.420 msec
+Throughput 1:           0.067 M Lines/s
+Throughput 2:           1.337 M Value/s
+
+*** LAST ROW ***
+1588111200 -> 30.000000|4258.000000|0.000164|0.000163|0.000046|2999.540000|100015.000000|0.000046|0.000157|0.000263|0.000122|0.000202|0.000202|0.000076|183002.000000|0.021925|2934.490000|0.000122|0.000157|
+
+58.123690
+67.674720
+
+444816
+2225278
+54430
+
+ 🔥  TimeSeries   master  ./test_cache.o dataset/MAX-PLANCK/MPI_Soil_10-18_UTC_UNIX.csv 
+*** COMPRESSION ***
+Computed in:            9883.069 msec
+Throughput 1:           0.048 M Lines/s
+Throughput 2:           1.581 M Value/s
+Reduction size:         3.226x
+
+*** DECOMPRESSION ***
+Computed in:            6756.529 msec
+Throughput 1:           0.070 M Lines/s
+Throughput 2:           2.312 M Value/s
+
+*** LAST ROW ***
+1546296600 -> 5.600000|5.690000|7.380000|5.840000|5.950000|6.380000|6.050000|6.350000|6.870000|6.020000|6.070000|7.840000|33.680000|33.470000|29.280000|25.970000|31.870000|35.200000|27.810000|33.510000|31.290000|23.880000|33.220000|32.620000|33.480000|31.950000|16.270000|31.990000|31.220000|34.010000|37.050000|28.840000|
+
+58.092863
+58.738062
+
+11533353
+3603775
+10136
+
+ 🔥  TimeSeries   master  ./test_cache.o dataset/BAR_CRAWL/all_accelerometer_data_pids_13_lbl.csv 
+*** COMPRESSION ***
+Computed in:            52524.967 msec
+Throughput 1:           0.268 M Lines/s
+Throughput 2:           1.338 M Value/s
+Reduction size:         1.745x
+
+*** DECOMPRESSION ***
+Computed in:            40871.518 msec
+Throughput 1:           0.344 M Lines/s
+Throughput 2:           1.720 M Value/s
+
+*** LAST ROW ***
+1493829248294 -> 2.000000|-0.107288|0.153548|0.168595|
+
+46.496080
+70.413177
+
+13910999
+29396902
+12922351

@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
                   << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << std::endl;
     }
     else
-    { 
+    {
         std::cout << "*** DECOMPRESSION ***" << std::endl;
         std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
         std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
@@ -111,9 +111,11 @@ int main(int argc, char *argv[])
         std::cout << std::endl;
     }
 
+    std::cout.precision(2);
+    std::cout << std::fixed;
+    std::cout << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
+    std::cout << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
+    std::cout << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
 
-    std::cout << c.countA << std::endl;
-    std::cout << c.countB << std::endl;
-    std::cout << c.countC << std::endl;
     return 0;
 }
