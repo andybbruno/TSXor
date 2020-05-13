@@ -27,15 +27,15 @@ private:
     // }
 
 public:
-    Cache(size_t dim = 64)
+    Cache(size_t dim = 127)
     {
         buffer = std::deque<T>(dim, 0);
     }
 
-    void insert(T val)
+    inline void insert(T val)
     {
         //Remove tail from all containers
-        auto remove_tail = buffer.back();
+        // auto remove_tail = buffer.back();
         // set.erase(remove_tail);
         // map.erase(computeKey(remove_tail));
         buffer.pop_back();

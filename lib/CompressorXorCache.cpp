@@ -38,7 +38,6 @@ struct CompressorXorCache
     CompressorXorCache(uint64_t timestamp)
     {
         blockTimestamp = timestamp;
-        // stream = std::stringstream();
         addHeader(timestamp);
     }
 
@@ -65,20 +64,14 @@ struct CompressorXorCache
     {
         storedDelta = timestamp - blockTimestamp;
         storedTimestamp = timestamp;
-        // storedValues = values;
 
         out.append(storedDelta, FIRST_DELTA_BITS);
         for (int i = 0; i < values.size(); i++)
         {
             uint64_t x = *((uint64_t *)&(values[i]));
-            // out.append(*x, 64);
-
             append64(x);
             cache[i].insert(x);
         }
-
-        // storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
-        // storedTrailingZeros = std::vector<uint64_t>(values.size(), 64);
     }
 
     void close()
@@ -149,19 +142,11 @@ struct CompressorXorCache
             if (cache[i].contains(val))
             {
                 auto offset = cache[i].getIndexOf(val);
-
-                // // Write 0
-                // out.push_back(0);
-
-                // //Write offset
-                // out.append(offset, 7);
-
                 uint8_t *bytes = (uint8_t *)&offset;
                 append8(bytes[0]);
 
                 countA++;
             }
-            // else if (cache[i].containsCandidate(val))
             else
             {
                 uint64_t candidate = cache[i].getCandidate(val);
@@ -175,11 +160,6 @@ struct CompressorXorCache
                 {
                     auto offset = cache[i].getIndexOf(candidate);
 
-                    // // Write 1
-                    // out.push_back(1);
-                    // //Write offset
-                    // out.append(offset, 7);
-
                     //WRITE 1
                     offset |= 0x80;
                     uint8_t *bytes = (uint8_t *)&offset;
@@ -187,10 +167,6 @@ struct CompressorXorCache
 
                     auto xor_len_bytes = 8 - lead_zeros_bytes - trail_zeros_bytes;
                     xor_ >>= (trail_zeros_bytes * 8);
-
-                    // out.append(trail_zeros_bytes, 4);
-                    // out.append(xor_len_bytes, 4);
-                    // out.append(xor_, (8 * xor_len_bytes));
 
                     uint8_t head = (trail_zeros_bytes << 4) | xor_len_bytes;
                     append8(head);
@@ -205,22 +181,12 @@ struct CompressorXorCache
                 }
                 else
                 {
-                    // out.append(255, 8);
-                    // out.append(val, 64);
-
                     append8((uint8_t)255);
                     append64(val);
 
                     countC++;
                 }
             }
-
-            // else
-            // {
-            //     out.append(255, 8);
-            //     out.append(val, 64);
-            //     countC++;
-            // }
         }
 
         for (int i = 0; i < values.size(); i++)

@@ -31,12 +31,8 @@ struct DecompressorXorCache
         in = input;
         ncols = n;
         bytes = bts;
-
-        storedLeadingZeros = std::vector<uint64_t>(ncols, 0);
-        storedTrailingZeros = std::vector<uint64_t>(ncols, 0);
         storedVal = std::vector<double>(ncols, 0);
         cache = std::vector<Cache<uint64_t>>(ncols);
-
         readHeader();
     }
 
@@ -136,10 +132,16 @@ struct DecompressorXorCache
 
     void nextValue()
     {
+        uint64_t final_val;
+        uint64_t offset;
+        uint64_t info;
+        uint64_t trail_zeros_bytes;
+        uint64_t xor_bytes;
+        uint64_t xor_;
+        uint64_t head;
         for (int i = 0; i < ncols; i++)
         {
-            uint64_t head = readBytes(1);
-            uint64_t final_val = 0;
+            head = readBytes(1);
 
             if (head < 128)
             {
@@ -151,18 +153,23 @@ struct DecompressorXorCache
             }
             else
             {
-                uint64_t offset = head & (~((UINT64_MAX << 7)));
-                uint64_t info = readBytes(1);
-                uint64_t trail_zeros_bytes = info >> 4;
-                uint64_t xor_bytes = info & (~((UINT64_MAX << 4)));
-                uint64_t lead_zeros_bytes = 8 - xor_bytes - trail_zeros_bytes;
-                uint64_t xor_ = readBytes(xor_bytes) << (8 * trail_zeros_bytes);
+                offset = head & (~((UINT64_MAX << 7)));
+                info = readBytes(1);
+                trail_zeros_bytes = info >> 4;
+                xor_bytes = info & (~((UINT64_MAX << 4)));
+                xor_ = readBytes(xor_bytes) << (8 * trail_zeros_bytes);
                 final_val = xor_ ^ cache[i].get(offset);
             }
             cache[i].insert(final_val);
             double p = (*(double *)&final_val);
             storedVal[i] = p;
         }
+        // for (int i = 0; i < ncols; i++)
+        // {
+        //     cache[i].insert(final_val[i]);
+        //     double p = (*(double *)&(final_val[i]));
+        //     storedVal[i] = p;
+        // }
     }
 
     inline uint64_t readBytes(size_t len)

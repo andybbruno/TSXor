@@ -13,7 +13,7 @@ private:
     uint64_t *curr_bucket;
     uint64_t m_free_slots = 64;
     uint64_t m_used_slots = 0;
-    uint64_t m_final_size = 0;
+    // uint64_t m_final_size = 0;
 
     // False = you can only write
     // True = you can only read
