@@ -110,5 +110,10 @@ int main(int argc, char *argv[])
             std::cout << x << "|";
         std::cout << std::endl;
     }
+
+
+    std::cout << c.countA << std::endl;
+    std::cout << c.countB << std::endl;
+    std::cout << c.countC << std::endl;
     return 0;
 }

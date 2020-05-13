@@ -2,15 +2,21 @@
 #include <map>
 #include <string>
 #include "BitStream.cpp"
+#include "Cache.cpp"
 #include "zigzag.hpp"
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
-struct CompressorMulti
+struct CompressorCache
 {
+    std::vector<Cache<uint64_t>> cache;
+
     uint8_t FIRST_DELTA_BITS = 32;
+
+    std::vector<uint64_t> DEBUG___;
+    std::vector<uint64_t> DEBUG2___;
 
     std::vector<uint64_t> storedLeadingZeros;
     std::vector<uint64_t> storedTrailingZeros;
@@ -23,10 +29,9 @@ struct CompressorMulti
     uint countB = 0;
     uint countC = 0;
 
-
     BitStream out;
 
-    CompressorMulti(uint64_t timestamp)
+    CompressorCache(uint64_t timestamp)
     {
         blockTimestamp = timestamp;
         addHeader(timestamp);
@@ -42,6 +47,7 @@ struct CompressorMulti
         if (storedTimestamp == 0)
         {
             writeFirst(timestamp, vals);
+            cache = std::vector<Cache<uint64_t>>(vals.size());
         }
         else
         {
@@ -130,20 +136,25 @@ struct CompressorMulti
     {
         for (int i = 0; i < values.size(); i++)
         {
-            auto x = storedValues[i];
-            auto y = values[i];
-            uint64_t *a = (uint64_t *)&x;
-            uint64_t *b = (uint64_t *)&y;
-            uint64_t xor_ = *a ^ *b;
+            uint64_t val = *((uint64_t *)&values[i]);
 
-            if (xor_ == 0)
+            if (cache[i].contains(val))
             {
+                auto offset = cache[i].getIndexOf(val);
+
                 // Write 0
                 out.push_back(0);
+
+                //Write offset
+                out.append(offset, 7);
+
                 countA++;
             }
             else
             {
+                uint64_t last_val = *((uint64_t *)&storedValues[i]);
+                uint64_t xor_ = val ^ last_val;
+
                 int leadingZeros = __builtin_clzll(xor_);
                 int trailingZeros = __builtin_ctzll(xor_);
 
@@ -169,6 +180,7 @@ struct CompressorMulti
                     xor_ >>= storedTrailingZeros[i];
                     out.append(xor_, significantBits);
                     countB++;
+                    DEBUG___.push_back(significantBits);
                 }
                 else
                 {
@@ -184,8 +196,10 @@ struct CompressorMulti
                     storedLeadingZeros[i] = leadingZeros;
                     storedTrailingZeros[i] = trailingZeros;
                     countC++;
+                    DEBUG2___.push_back(12 + significantBits);
                 }
             }
+            cache[i].insert(val);
             storedValues[i] = values[i];
         }
     }

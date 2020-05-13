@@ -1,7 +1,8 @@
 #include <vector>
 #include <filesystem>
-#include "lib/CompressorHDP.cpp"
-// #include "lib/DecompressorFPC.cpp"
+#include <numeric>
+#include "lib/CompressorCache.cpp"
+#include "lib/DecompressorCache.cpp"
 #include "lib/CSVReader.cpp"
 
 int numLines = 0;
@@ -9,8 +10,6 @@ int numLines = 0;
 int main(int argc, char *argv[])
 {
 
-    // CSVReader reader("/Users/andrea/workspace/TimeSeries/csv/_DEBUG.csv");
-    // CSVReader reader("dataset/OXFORD/manrealizedvolatilityindices_UTC_UNIX_lbl.csv");
     // CSVReader reader("csv/test_2COLS_100K.csv");
 
     if (argc < 2)
@@ -19,6 +18,7 @@ int main(int argc, char *argv[])
     }
 
     CSVReader reader(argv[1]);
+
     bool printAsCSV = argc > 2;
 
     // long lines = atoi(argv[1]);
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_compr = std::chrono::system_clock::now();
-    CompressorHDP c(times[0]);
+    CompressorCache c(times[0]);
     for (int i = 0; i < nlines; i++)
     {
         c.addValue(times[i], values[i]);
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     auto elapsed = (end_compr - start_compr);
     auto microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     auto original_size = 64 * nlines * (ncols + 1);
-    auto compressed_size = c.bit_stream.size() + c.byte_stream.size();
+    auto compressed_size = c.out.size();
     std::cout.precision(3);
     std::cout << std::fixed;
 
@@ -78,44 +78,47 @@ int main(int argc, char *argv[])
                   << std::endl;
     }
 
-    // auto start_dec = std::chrono::system_clock::now();
-    // DecompressorFPC dm(c.out, ncols);
-    // while (dm.hasNext())
-    // {
-    //     // PairMulti p = dm.readPair();
-    //     // std::cout << p.toString() << std::endl;
-    //     // std::cout << dm.in << std::endl;
-    // }
-    // auto end_dec = std::chrono::system_clock::now();
-    // elapsed = (end_dec - start_dec);
-    // microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+    auto start_dec = std::chrono::system_clock::now();
+    DecompressorCache dm(c.out, ncols);
+    while (dm.hasNext())
+    {
+    }
+    auto end_dec = std::chrono::system_clock::now();
+    elapsed = (end_dec - start_dec);
+    microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 
-    // if (printAsCSV)
-    // {
-    //     std::cout << ((double)microsec / 1000) << ","
-    //               << (double)nlines / ((double)microsec) << ","
-    //               << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << std::endl;
-    // }
-    // else
-    // {
-    //     std::cout << "*** DECOMPRESSION ***" << std::endl;
-    //     std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
-    //     std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
-    //     std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl
-    //               << std::endl;
+    if (printAsCSV)
+    {
+        std::cout << ((double)microsec / 1000) << ","
+                  << (double)nlines / ((double)microsec) << ","
+                  << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << std::endl;
+    }
+    else
+    {
+        std::cout << "*** DECOMPRESSION ***" << std::endl;
+        std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
+        std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
+        std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl
+                  << std::endl;
 
-    //     std::cout.precision(6);
-    //     std::cout << std::fixed;
-    //     std::cout << "*** LAST ROW ***" << std::endl;
-    //     std::cout << dm.storedTimestamp << " -> ";
-    //     for (auto x : dm.storedVal)
-    //         std::cout << x << "|";
-    //     std::cout << std::endl;
-    // }
+        std::cout.precision(6);
+        std::cout << std::fixed;
+        std::cout << "*** LAST ROW ***" << std::endl;
+        std::cout << dm.storedTimestamp << " -> ";
+        for (auto x : dm.storedVal)
+            std::cout << x << "|";
+        std::cout << std::endl;
+    }
 
-    std::cout << ((double)c.counter1 / c.counter0) * 100 << std::endl;
-    std::cout << ((double)c.counter2 / c.counter0) * 100 << std::endl;
-    std::cout << ((double)c.counter3 / c.counter0) * 100 << std::endl;
+    auto average = std::accumulate(c.DEBUG___.begin(), c.DEBUG___.end(), 0.0) / c.DEBUG___.size();
+    auto average2 = std::accumulate(c.DEBUG2___.begin(), c.DEBUG2___.end(), 0.0) / c.DEBUG2___.size();
 
+    std::cout << std::endl;
+    std::cout << average << std::endl;
+    std::cout << average2 << std::endl;
+    std::cout << std::endl;
+    std::cout << c.countA << std::endl;
+    std::cout << c.countB << std::endl;
+    std::cout << c.countC << std::endl;
     return 0;
 }

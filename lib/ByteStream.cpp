@@ -51,13 +51,27 @@ public:
         return data.size() * 8;
     }
 
-    uint64_t get(uint64_t len)
+    uint64_t get_byte()
+    {
+        auto tmp = data.front();
+        data.pop_front();
+        return tmp;
+    }
+
+    uint64_t get(uint8_t len)
     {
         assert(closed);
-        assert(len <= 64);
         assert(data.size() > 0);
 
-        uint64_t t_bits = 0;
+        uint64_t t_bits = data.front();
+        data.pop_front();
+
+        for (int i = 1; i < len; i++)
+        {
+            t_bits <<= 8;
+            t_bits |= data.front();
+            data.pop_front();
+        }
 
         return t_bits;
     }
