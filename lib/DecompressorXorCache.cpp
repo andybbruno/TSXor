@@ -8,7 +8,7 @@
 
 struct DecompressorXorCache
 {
-    std::vector<Cache<uint64_t>> cache;
+    std::vector<Cache> cache;
 
     std::vector<uint64_t> storedLeadingZeros;
     std::vector<uint64_t> storedTrailingZeros;
@@ -23,16 +23,18 @@ struct DecompressorXorCache
 
     // BitVector in;
     BitStream in;
-    std::deque<uint8_t> bytes;
     uint64_t ncols;
 
-    DecompressorXorCache(BitStream &input, std::deque<uint8_t> &bts, uint64_t n)
+    std::vector<uint8_t> bytes;
+    uint64_t current_idx = 0;
+
+    DecompressorXorCache(BitStream &input, std::vector<uint8_t> &bts, uint64_t n)
     {
         in = input;
         ncols = n;
         bytes = bts;
         storedVal = std::vector<double>(ncols, 0);
-        cache = std::vector<Cache<uint64_t>>(ncols);
+        cache = std::vector<Cache>(ncols);
         readHeader();
     }
 
@@ -177,8 +179,8 @@ struct DecompressorXorCache
         uint64_t val = 0;
         for (int i = 0; i < len; i++)
         {
-            val |= bytes.front();
-            bytes.pop_front();
+            val |= bytes[current_idx];
+            current_idx++;
             if (i != (len - 1))
             {
                 val <<= 8;

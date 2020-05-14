@@ -13,7 +13,7 @@
 
 struct CompressorXorCache
 {
-    std::vector<Cache<uint64_t>> cache;
+    std::vector<Cache> cache;
 
     uint8_t FIRST_DELTA_BITS = 32;
 
@@ -33,7 +33,7 @@ struct CompressorXorCache
     uint countC = 0;
 
     BitStream out;
-    std::deque<uint8_t> bytes;
+    std::vector<uint8_t> bytes;
 
     CompressorXorCache(uint64_t timestamp)
     {
@@ -50,7 +50,7 @@ struct CompressorXorCache
     {
         if (storedTimestamp == 0)
         {
-            cache = std::vector<Cache<uint64_t>>(vals.size());
+            cache = std::vector<Cache>(vals.size());
             writeFirst(timestamp, vals);
         }
         else

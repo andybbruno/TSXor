@@ -1,86 +1,57 @@
 #pragma once
 #include <deque>
 #include <unordered_set>
+#include <algorithm>
 
-template <class T>
+//MAX CACHE SIZE IS 127
+#define CACHE_SIZE 127
+
 class Cache
 {
 private:
-    std::deque<T> buffer;
-    // std::unordered_set<T> set;
-    // std::map<uint16_t, uint64_t> map;
-
-    // inline uint16_t computeKey(T val)
-    // {
-    //     uint16_t key = 0;
-    //     uint8_t *p = (uint8_t *)&val;
-
-    //     key |= p[7];
-    //     key <<= 8;
-    //     // key |= p[6];
-    //     // key <<= 8;
-    //     // key |= p[1];
-    //     // key <<= 8;
-    //     key |= p[0];
-
-    //     return key;
-    // }
+    std::deque<uint64_t> buffer;
+    std::vector<uint64_t> tmp;
 
 public:
-    Cache(size_t dim = 127)
+    Cache(size_t dim = CACHE_SIZE)
     {
-        buffer = std::deque<T>(dim, 0);
+        buffer = std::deque<uint64_t>(dim, 0);
+        tmp = std::vector<uint64_t>(dim, 0);
     }
 
-    inline void insert(T val)
+    inline void insert(uint64_t val)
     {
-        //Remove tail from all containers
-        // auto remove_tail = buffer.back();
-        // set.erase(remove_tail);
-        // map.erase(computeKey(remove_tail));
+        //Remove tail
         buffer.pop_back();
 
-        //Add the fresh value to all containers
+        //Add the fresh value
         buffer.push_front(val);
-        // set.insert(val);
-        // auto key = computeKey(val);
-        // map.insert_or_assign(key, val);
     }
 
-    inline bool contains(T val)
+    inline bool contains(uint64_t val)
     {
-        // return set.find(val) != set.end();
         return std::find(buffer.begin(), buffer.end(), val) != buffer.end();
     }
 
-    inline int getIndexOf(T val)
+    inline int getIndexOf(uint64_t val)
     {
         return std::distance(buffer.begin(), std::find(buffer.begin(), buffer.end(), val));
     }
 
-    inline T get(int offset)
+    inline uint64_t get(int offset)
     {
         return buffer[offset];
     }
 
-    inline T getLast()
+    inline uint64_t getLast()
     {
         return buffer.front();
     }
 
-    // inline bool containsCandidate(T val)
-    // {
-    //     auto key = computeKey(val);
-    //     return map.find(key) != map.end();
-    // }
-
-    inline T getCandidate(T val)
+    inline uint64_t getCandidate(uint64_t val)
     {
-        // auto key = computeKey(val);
-        // return map[key];
-        std::vector<uint64_t> tmp(buffer.size(), 0);
-
-        for (int i = 0; i < buffer.size(); i++)
+        
+        for (int i = 0; i < CACHE_SIZE; i++)
         {
             tmp[i] = val ^ buffer[i];
         }
