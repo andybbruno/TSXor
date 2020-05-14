@@ -109,12 +109,14 @@ int main(int argc, char *argv[])
         for (auto x : dm.storedVal)
             std::cout << x << "|";
         std::cout << std::endl;
+
+        
+        std::cout.precision(2);
+        std::cout << std::fixed;
+        std::cout << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
+        std::cout << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
+        std::cout << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
     }
 
-    std::cout.precision(2);
-    std::cout << std::fixed;
-    std::cout << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
-    std::cout << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
-    std::cout << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
     return 0;
 }
