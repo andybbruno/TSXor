@@ -8,33 +8,37 @@ int numLines = 0;
 
 int main(int argc, char *argv[])
 {
-
-    // CSVReader reader("/Users/andrea/workspace/TimeSeries/csv/_DEBUG.csv");
-
     if (argc < 2)
     {
         return 0;
     }
 
-    CSVReader reader(argv[1]);
     bool printAsCSV = argc > 2;
+    std::string filename(argv[1]);
+    auto infile = std::ifstream(filename, std::ios::out | std::ios::binary);
 
-    // long lines = atoi(argv[1]);
-    // int ncols = atoi(argv[2]);
+    uint64_t nlines;
+    uint64_t ncols;
 
-    uint64_t nlines = 0;
-    std::vector<std::vector<double>> lines;
-    while (!reader.isEmpty())
+    infile.read((char *)&nlines, sizeof(uint64_t));
+    infile.read((char *)&ncols, sizeof(uint64_t));
+
+    std::vector<std::vector<double>> data(nlines, std::vector<double>(ncols));
+
+    for (int i = 0; i < nlines; i++)
     {
-        lines.push_back(reader.nextLine());
-        nlines++;
+        for (int j = 0; j < ncols; j++)
+        {
+            infile.read((char *)&data[i][j], sizeof(double));
+        }
     }
-    int ncols = lines[0].size() - 1;
-
+    infile.close();
+    ncols--;
+    
     std::vector<std::vector<double>> values;
     std::vector<uint64_t> times;
 
-    for (auto x : lines)
+    for (auto x : data)
     {
         times.push_back(x[0]);
         std::vector<double> t(x.begin() + 1, x.end());

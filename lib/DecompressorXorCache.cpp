@@ -5,6 +5,8 @@
 #include <iostream>
 #include "zigzag.hpp"
 #include "BitStream.cpp"
+#include "Cache.cpp"
+
 
 struct DecompressorXorCache
 {
