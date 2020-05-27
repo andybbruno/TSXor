@@ -116,11 +116,41 @@ int main(int argc, char *argv[])
 
         std::cout.precision(2);
         std::cout << std::fixed;
-        std::cout << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countB_bits / (c.countB)) / 8 << " bytes" << std::endl;
-        std::cout << ((double)c.countC_bits / (c.countC)) / 8 << " bytes" << std::endl;
+        std::cout << "A: \t" << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
+        std::cout << "B: \t" << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
+        std::cout << "C: \t" << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
+
+        int i = 0;
+        int numerator = 0;
+        int denominator = 0;
+        for (auto x : c.countB_vec)
+        {
+            numerator += (i * x);
+            i++;
+        }
+        for (auto x : c.countB_vec)
+        {
+            denominator += x;
+            i++;
+        }
+
+        std::cout << "B  -->  " << ((double)numerator / denominator) << " bytes" << std::endl;
+
+        i = 0;
+        numerator = 0;
+        denominator = 0;
+        for (auto x : c.countC_vec)
+        {
+            numerator += (i * x);
+            i++;
+        }
+        for (auto x : c.countC_vec)
+        {
+            denominator += x;
+            i++;
+        }
+
+        std::cout << "C  -->  " << ((double)numerator / denominator) << " bytes" << std::endl;
     }
 
     return 0;

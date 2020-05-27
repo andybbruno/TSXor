@@ -115,10 +115,10 @@ int main(int argc, char *argv[])
 
                 std::cout.precision(2);
         std::cout << std::fixed;
-        std::cout << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countB_bytes / (c.countB)) << " bytes" << std::endl;
+        std::cout << "A: \t" << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
+        std::cout << "B: \t" << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
+        std::cout << "C: \t" << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
+        std::cout << "B  -->  " << ((double)c.countB_bytes / (c.countB)) << " bytes" << std::endl;
     }
 
     return 0;
