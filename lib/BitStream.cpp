@@ -8,7 +8,6 @@
 class BitStream
 {
 private:
-    std::deque<uint64_t> data;
     uint64_t m_size = 0;
     uint64_t *curr_bucket;
     uint64_t m_free_slots = 64;
@@ -20,6 +19,8 @@ private:
     bool closed = false;
 
 public:
+    std::deque<uint64_t> data;
+    
     void append(uint64_t bits, uint64_t len)
     {
         // std::cout << bits << " ::: " << len << std::endl;
@@ -123,14 +124,6 @@ public:
     inline bool readBit()
     {
         return (bool)get(1);
-    }
-
-    void saveToFile()
-    {
-        std::ios_base::sync_with_stdio(false);
-        auto myfile = std::fstream("file.binary", std::ios::out | std::ios::binary);
-        myfile.write((char *)&data[0], data.size() * sizeof(uint64_t));
-        myfile.close();
     }
 };
 

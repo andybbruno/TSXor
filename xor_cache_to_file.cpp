@@ -1,13 +1,15 @@
 #include <vector>
 #include <filesystem>
-#include "lib/CompressorMulti.cpp"
-#include "lib/DecompressorMulti.cpp"
+#include <numeric>
+#include "lib/CompressorXorCache.cpp"
+#include "lib/DecompressorXorCache.cpp"
 #include "lib/CSVReader.cpp"
 
 int numLines = 0;
 
 int main(int argc, char *argv[])
 {
+
     if (argc < 2)
     {
         return 0;
@@ -46,7 +48,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_compr = std::chrono::system_clock::now();
-    CompressorMulti c(times[0]);
+    CompressorXorCache c(times[0]);
     for (int i = 0; i < nlines; i++)
     {
         c.addValue(times[i], values[i]);
@@ -58,7 +60,7 @@ int main(int argc, char *argv[])
     auto elapsed = (end_compr - start_compr);
     auto microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     auto original_size = 64 * nlines * (ncols + 1);
-    auto compressed_size = c.out.size();
+    auto compressed_size = c.out.size() + (c.bytes.size() * 8);
     std::cout.precision(3);
     std::cout << std::fixed;
 
@@ -80,48 +82,30 @@ int main(int argc, char *argv[])
                   << std::endl;
     }
 
-    auto start_dec = std::chrono::system_clock::now();
-    DecompressorMulti dm(c.out, ncols);
-    while (dm.hasNext())
-    {
-        // PairMulti p = dm.readPair();
-        // std::cout << p.toString() << std::endl;
-        // std::cout << dm.in << std::endl;
-    }
-    auto end_dec = std::chrono::system_clock::now();
-    elapsed = (end_dec - start_dec);
-    microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+    std::string rawname = filename.substr(0, filename.find_last_of("."));
+    filename = rawname + std::string(".xor");
+    auto myfile = std::ofstream(filename, std::ios::out | std::ios::binary);
 
-    if (printAsCSV)
-    {
-        std::cout << ((double)microsec / 1000) << ","
-                  << (double)nlines / ((double)microsec) << ","
-                  << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << std::endl;
-    }
-    else
-    {
-        std::cout << "*** DECOMPRESSION ***" << std::endl;
-        std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
-        std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
-        std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl
-                  << std::endl;
+    auto bits_strm = c.out.data;
+    auto bytes_strm = c.bytes;
 
-        std::cout.precision(6);
-        std::cout << std::fixed;
-        std::cout << "*** LAST ROW ***" << std::endl;
-        std::cout << dm.storedTimestamp << " -> ";
-        for (auto x : dm.storedVal)
-            std::cout << x << "|";
-        std::cout << std::endl;
+    auto bit_size = bits_strm.size();
+    auto byte_size = bytes_strm.size();
 
-        std::cout.precision(2);
-        std::cout << std::fixed;
-        std::cout << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << ((double)c.countB_bits / (c.countB)) / 8 << " bytes" << std::endl;
-        std::cout << ((double)c.countC_bits / (c.countC)) / 8 << " bytes" << std::endl;
+    myfile.write((char *)&bit_size, sizeof(size_t));
+    myfile.write((char *)&byte_size, sizeof(size_t));
+
+    for (auto x : bits_strm)
+    {  
+        myfile.write((char *)&x, sizeof(uint64_t));
     }
+    
+    for (auto y : bytes_strm)
+    {  
+        myfile.write((char *)&y, sizeof(uint8_t));
+    }
+
+    myfile.close();
 
     return 0;
 }

@@ -31,6 +31,7 @@ struct CompressorXorCache
     uint countA = 0;
     uint countB = 0;
     uint countC = 0;
+    uint countB_bytes = 0;
 
     BitStream out;
     std::vector<uint8_t> bytes;
@@ -178,6 +179,7 @@ struct CompressorXorCache
                     }
 
                     countB++;
+                    countB_bytes += (2 + xor_len_bytes);
                 }
                 else
                 {

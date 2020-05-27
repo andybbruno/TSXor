@@ -22,8 +22,10 @@ struct CompressorMulti
     uint countA = 0;
     uint countB = 0;
     uint countC = 0;
+    uint countB_bits = 0;
+    uint countC_bits = 0;
 
-
+    BitStream ts_out;
     BitStream out;
 
     CompressorMulti(uint64_t timestamp)
@@ -34,7 +36,7 @@ struct CompressorMulti
 
     void addHeader(uint64_t timestamp)
     {
-        out.append(timestamp, 64);
+        ts_out.append(timestamp, 64);
     }
 
     void addValue(uint64_t timestamp, std::vector<double> const &vals)
@@ -56,7 +58,7 @@ struct CompressorMulti
         storedTimestamp = timestamp;
         storedValues = values;
 
-        out.append(storedDelta, FIRST_DELTA_BITS);
+        ts_out.append(storedDelta, FIRST_DELTA_BITS);
         for (double d : values)
         {
             uint64_t *x = (uint64_t *)&d;
@@ -69,7 +71,7 @@ struct CompressorMulti
 
     void close()
     {
-        out.close();
+        ts_out.close();
     }
 
     void compressTimestamp(long timestamp)
@@ -80,7 +82,7 @@ struct CompressorMulti
 
         if (deltaD == 0)
         {
-            out.push_back(0);
+            ts_out.push_back(0);
         }
         else
         {
@@ -98,25 +100,25 @@ struct CompressorMulti
             case 7:
                 //DELTA_7_MASK adds '10' to deltaD
                 deltaD |= DELTA_7_MASK;
-                out.append(deltaD, 9);
+                ts_out.append(deltaD, 9);
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to deltaD
                 deltaD |= DELTA_9_MASK;
-                out.append(deltaD, 12);
+                ts_out.append(deltaD, 12);
                 break;
             case 10:
             case 11:
             case 12:
                 //DELTA_12_MASK adds '1110' to deltaD
                 deltaD |= DELTA_12_MASK;
-                out.append(deltaD, 16);
+                ts_out.append(deltaD, 16);
                 break;
             default:
                 // Append '1111'
-                out.append(0x0F, 4);
-                out.append(deltaD, 32);
+                ts_out.append(0x0F, 4);
+                ts_out.append(deltaD, 32);
                 // out.append(deltaD, 64);
                 break;
             }
@@ -169,6 +171,7 @@ struct CompressorMulti
                     xor_ >>= storedTrailingZeros[i];
                     out.append(xor_, significantBits);
                     countB++;
+                    countB_bits += (2 + significantBits);
                 }
                 else
                 {
@@ -184,6 +187,7 @@ struct CompressorMulti
                     storedLeadingZeros[i] = leadingZeros;
                     storedTrailingZeros[i] = trailingZeros;
                     countC++;
+                    countC_bits += (13 + significantBits);
                 }
             }
             storedValues[i] = values[i];
