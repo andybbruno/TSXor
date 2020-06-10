@@ -1,14 +1,29 @@
-compressor='./test_FPC.o'
-cname='FPC'
+compressor='./test_xor_cache.o'
 
-echo 'AMPD'
-for i in {1..10}; do $compressor dataset/AMPd/AMPd.bin 1; done > res/AMPd_$cname.txt
+dataset='AMPd'
+echo $dataset
+$compressor dataset/$dataset/$dataset.bin > res_lz_tz/$dataset.txt
 
-echo 'MSRC-12'
-for i in {1..10}; do $compressor dataset/MSRC-12/MSRC-12.bin 1; done > res/MSRC_$cname.txt
+dataset='BAR_CRAWL'
+echo $dataset
+$compressor dataset/$dataset/$dataset.bin > res_lz_tz/$dataset.txt
 
-echo 'PAMAP'
-for i in {1..10}; do $compressor dataset/PAMAP/PAMAP.bin 1; done > res/PAMAP_$cname.txt
+dataset='MAX-PLANCK'
+echo $dataset
+$compressor dataset/$dataset/$dataset.bin > res_lz_tz/$dataset.txt
 
-echo 'UCI-GAS'
-for i in {1..10}; do $compressor dataset/UCI-GAS/UCI-GAS.bin 1; done > res/UCI-GAS_$cname.txt
+dataset='MSRC-12'
+echo $dataset
+$compressor dataset/$dataset/$dataset.bin > res_lz_tz/$dataset.txt
+
+dataset='OXFORD'
+echo $dataset
+$compressor dataset/$dataset/$dataset.bin > res_lz_tz/$dataset.txt
+
+dataset='PAMAP'
+echo $dataset
+$compressor dataset/$dataset/$dataset.bin > res_lz_tz/$dataset.txt
+
+dataset='UCI-GAS'
+echo $dataset
+$compressor dataset/$dataset/$dataset.bin > res_lz_tz/$dataset.txt
