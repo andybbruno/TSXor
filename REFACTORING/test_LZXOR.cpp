@@ -3,7 +3,7 @@
 #include <numeric>
 #include "core/DecompressorLZXOR.cpp"
 #include "core/CompressorLZXOR.cpp"
-#include "lib/CSVReader.cpp"
+#include "util/CSVReader.cpp"
 
 int numLines = 0;
 
