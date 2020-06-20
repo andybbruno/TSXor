@@ -1,8 +1,8 @@
 #include <vector>
 #include <filesystem>
 #include <numeric>
-#include "lib/DecompressorLZXOR.cpp"
-#include "lib/CompressorLZXOR.cpp"
+#include "core/DecompressorLZXOR.cpp"
+#include "core/CompressorLZXOR.cpp"
 #include "lib/CSVReader.cpp"
 
 int numLines = 0;

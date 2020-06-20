@@ -1,7 +1,7 @@
 #include <vector>
 #include <filesystem>
-#include "lib/CompressorFPC.cpp"
-#include "lib/DecompressorFPC.cpp"
+#include "core/CompressorFPC.cpp"
+#include "core/DecompressorFPC.cpp"
 #include "lib/CSVReader.cpp"
 
 int numLines = 0;

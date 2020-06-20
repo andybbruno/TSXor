@@ -1,8 +1,8 @@
 #include <vector>
 #include <filesystem>
 #include <numeric>
-#include "lib/CompressorXorCache.cpp"
-#include "lib/DecompressorXorCache.cpp"
+#include "core/CompressorXorCache.cpp"
+#include "core/DecompressorXorCache.cpp"
 #include "lib/CSVReader.cpp"
 
 int numLines = 0;
