@@ -2,7 +2,7 @@
 #include <filesystem>
 #include "core/CompressorMulti.cpp"
 #include "core/DecompressorMulti.cpp"
-#include "lib/CSVReader.cpp"
+#include "util/CSVReader.cpp"
 
 int numLines = 0;
 

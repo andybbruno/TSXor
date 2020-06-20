@@ -3,7 +3,7 @@
 #include <numeric>
 #include "core/CompressorXorCache.cpp"
 #include "core/DecompressorXorCache.cpp"
-#include "lib/CSVReader.cpp"
+#include "util/CSVReader.cpp"
 
 int numLines = 0;
 

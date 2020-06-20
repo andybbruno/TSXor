@@ -2,7 +2,7 @@
 #include <filesystem>
 #include "core/CompressorFPC.cpp"
 #include "core/DecompressorFPC.cpp"
-#include "lib/CSVReader.cpp"
+#include "util/CSVReader.cpp"
 
 int numLines = 0;
 
