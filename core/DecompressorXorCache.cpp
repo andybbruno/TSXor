@@ -3,9 +3,9 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "zigzag.hpp"
-#include "BitStream.cpp"
-#include "Cache.cpp"
+#include "../lib/BitStream.cpp"
+#include "../lib/Cache.cpp"
+#include "../lib/zigzag.hpp"
 
 
 struct DecompressorXorCache

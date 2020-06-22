@@ -3,9 +3,9 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "BitStream.cpp"
-#include "Cache.cpp"
-#include "zigzag.hpp"
+#include "../lib/BitStream.cpp"
+#include "../lib/Cache.cpp"
+#include "../lib/zigzag.hpp"
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
@@ -32,6 +32,13 @@ struct CompressorXorCache
     uint countB = 0;
     uint countC = 0;
     uint countB_bytes = 0;
+
+
+    uint tsA = 0;
+    uint tsB = 0;
+    uint tsC = 0;
+    uint tsD = 0;
+    uint tsE = 0;
 
     BitStream out;
     std::vector<uint8_t> bytes;
@@ -88,6 +95,7 @@ struct CompressorXorCache
 
         if (deltaD == 0)
         {
+            tsA++;
             out.push_back(0);
         }
         else
@@ -106,12 +114,14 @@ struct CompressorXorCache
             case 7:
                 //DELTA_7_MASK adds '10' to deltaD
                 deltaD |= DELTA_7_MASK;
+                tsB++;
                 out.append(deltaD, 9);
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to deltaD
                 deltaD |= DELTA_9_MASK;
+                tsC++;
                 out.append(deltaD, 12);
                 break;
             case 10:
@@ -119,10 +129,12 @@ struct CompressorXorCache
             case 12:
                 //DELTA_12_MASK adds '1110' to deltaD
                 deltaD |= DELTA_12_MASK;
+                tsD++;
                 out.append(deltaD, 16);
                 break;
             default:
                 // Append '1111'
+                tsE++;
                 out.append(0x0F, 4);
                 out.append(deltaD, 32);
                 // out.append(deltaD, 64);
