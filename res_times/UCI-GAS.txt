@@ -1,4 +1,4 @@
-Case,%
+Case,Percentage
 A,98.9075
 B,1.08542
 C,0

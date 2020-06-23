@@ -56,11 +56,28 @@ int main(int argc, char *argv[])
 
     c.close();
 
-    std::cout << "A," << ((double)c.tsA / nlines) * 100 << std::endl;
-    std::cout << "B," << ((double)c.tsB / nlines) * 100 << std::endl;
-    std::cout << "C," << ((double)c.tsC / nlines) * 100 << std::endl;
-    std::cout << "D," << ((double)c.tsD / nlines) * 100 << std::endl;
-    std::cout << "E," << ((double)c.tsE / nlines) * 100 << std::endl;
+    auto v = c.ts__;
+
+    double sum = std::accumulate(std::begin(v), std::end(v), 0.0);
+    double mean = sum / v.size();
+
+    double accum = 0.0;
+    std::for_each(std::begin(v), std::end(v), [&](const double d) {
+        accum += (d - mean) * (d - mean);
+    });
+
+    double stdev = sqrt(accum / (v.size() - 1));
+
+    std::cout.precision(6);
+    std::cout << std::fixed;
+    std::cout << mean << std::endl;
+    std::cout << stdev << std::endl;
+
+    // std::cout << "A," << ((double)c.tsA / nlines) * 100 << std::endl;
+    // std::cout << "B," << ((double)c.tsB / nlines) * 100 << std::endl;
+    // std::cout << "C," << ((double)c.tsC / nlines) * 100 << std::endl;
+    // std::cout << "D," << ((double)c.tsD / nlines) * 100 << std::endl;
+    // std::cout << "E," << ((double)c.tsE / nlines) * 100 << std::endl;
 
     // auto end_compr = std::chrono::system_clock::now();
     // auto elapsed = (end_compr - start_compr);
