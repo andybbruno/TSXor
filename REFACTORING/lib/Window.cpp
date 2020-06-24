@@ -1,6 +1,5 @@
 #pragma once
 #include <deque>
-#include <unordered_set>
 #include <algorithm>
 
 //MAX WINDOW SIZE IS 127

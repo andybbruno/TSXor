@@ -55,7 +55,6 @@ struct DecompressorLZXOR
     {
         if (storedTimestamp == 0)
         {
-            // First item to read
             storedDelta = in.get(FIRST_DELTA_BITS);
 
             if (storedDelta == (1 << 14) - 1)

@@ -3,9 +3,9 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "BitStream.cpp"
-#include "Window.cpp"
-#include "zigzag.hpp"
+#include "../lib/BitStream.cpp"
+#include "../lib/Window.cpp"
+#include "../lib/Zigzag.hpp"
 
 #define DELTA_7_MASK 0x02 << 7;
 #define DELTA_9_MASK 0x06 << 9;
