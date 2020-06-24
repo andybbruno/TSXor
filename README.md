@@ -12,7 +12,7 @@ Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (PISA)
 
 Builiding the code
 -----------------
-We tested the code on MacOS 10.15.4 using `clang` version 11.0.3. 
+The code has been tested on MacOS 10.15.4 using `clang` version 11.0.3. 
 
 No dependencies are needed.
 
