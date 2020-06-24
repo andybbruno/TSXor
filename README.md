@@ -93,3 +93,6 @@ The following tables show the comparison between LZ-XOR with [Gorilla](https://w
 |      Oxford-Man      | 1.233x |  1.275x | **1.299x** |
 |         PAMAP        | 1.364x |  1.380x | **4.848x** |
 | UCI Gas Sensor Array | 1.338x |  1.228x | **3.499x** |
+
+
+Further details will be published in the next weeks.
