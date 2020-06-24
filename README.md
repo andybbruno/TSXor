@@ -8,7 +8,7 @@ Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (PISA)
 * [Input data format](#input-data-format)
 * [Tests](#tests)
 * [Benchmarks](#benchmarks)
-
+* [Notes](#notes)
 
 Builiding the code
 -----------------
@@ -95,4 +95,6 @@ The following tables show the comparison between LZ-XOR with [Gorilla](https://w
 | UCI Gas Sensor Array | 1.338x |  1.228x | **3.499x** |
 
 
-Further details will be published in the next weeks.
+Notes
+-----------------
+This is a preliminary version. Further details will be published in the next weeks.
