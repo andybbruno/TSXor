@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "lib/CSVReader.cpp"
+#include "CSVReader.cpp"
 
 int main(int argc, char *argv[])
 {
@@ -40,24 +40,4 @@ int main(int argc, char *argv[])
     myfile.close();
 
     std::cout << "Closed" << std::endl;
-
-    // READ PART
-    // auto infile = std::ifstream(filename, std::ios::out | std::ios::binary);
-
-    // uint64_t new_nclos;
-    // uint64_t new_nlines;
-
-    // infile.read((char *)&new_nlines, sizeof(uint64_t));
-    // infile.read((char *)&new_nclos, sizeof(uint64_t));
-
-    // std::cout << new_nclos << " --- " << new_nlines << std::endl;
-    // std::vector<std::vector<double>> data(new_nlines, std::vector<double>(new_nclos));
-
-    // for (int i = 0; i < nlines; i++)
-    // {
-    //     for (int j = 0; j < ncols; j++)
-    //     {
-    //         infile.read((char *)&data[i][j], sizeof(double));
-    //     }
-    // }
 }

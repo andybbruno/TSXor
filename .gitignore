@@ -41,4 +41,5 @@ test_readcsv.dSYM
 /csv
 .vscode
 /dct
-/DATA_ANALYSIS
+/_ANALYSIS
+/_OLD_VERSION

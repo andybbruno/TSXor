@@ -1,6 +1,0 @@
-Case,Percentage
-A,90.4762
-B,9.5238
-C,0
-D,0
-E,0
