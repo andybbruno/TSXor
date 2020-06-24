@@ -25,7 +25,7 @@ struct CompressorLZXOR
     
     std::vector<Window> window;
 
-    BitStream out;
+    BitStream bstream;
     std::vector<uint8_t> bytes;
 
     CompressorLZXOR(uint64_t timestamp)
@@ -36,7 +36,7 @@ struct CompressorLZXOR
 
     void addHeader(uint64_t timestamp)
     {
-        out.append(timestamp, 64);
+        bstream.append(timestamp, 64);
     }
 
     void addValue(uint64_t timestamp, std::vector<double> const &vals)
@@ -58,7 +58,7 @@ struct CompressorLZXOR
         storedDelta = timestamp - blockTimestamp;
         storedTimestamp = timestamp;
 
-        out.append(storedDelta, FIRST_DELTA_BITS);
+        bstream.append(storedDelta, FIRST_DELTA_BITS);
         for (int i = 0; i < values.size(); i++)
         {
             uint64_t x = *((uint64_t *)&(values[i]));
@@ -69,7 +69,7 @@ struct CompressorLZXOR
 
     void close()
     {
-        out.close();
+        bstream.close();
     }
 
     void compressTimestamp(long timestamp)
@@ -80,7 +80,7 @@ struct CompressorLZXOR
 
         if (deltaD == 0)
         {
-            out.push_back(0);
+            bstream.push_back(0);
         }
         else
         {
@@ -98,26 +98,26 @@ struct CompressorLZXOR
             case 7:
                 //DELTA_7_MASK adds '10' to deltaD
                 deltaD |= DELTA_7_MASK;
-                out.append(deltaD, 9);
+                bstream.append(deltaD, 9);
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to deltaD
                 deltaD |= DELTA_9_MASK;
-                out.append(deltaD, 12);
+                bstream.append(deltaD, 12);
                 break;
             case 10:
             case 11:
             case 12:
                 //DELTA_12_MASK adds '1110' to deltaD
                 deltaD |= DELTA_12_MASK;
-                out.append(deltaD, 16);
+                bstream.append(deltaD, 16);
                 break;
             default:
                 // Append '1111'
-                out.append(0x0F, 4);
-                out.append(deltaD, 32);
-                // out.append(deltaD, 64);
+                bstream.append(0x0F, 4);
+                bstream.append(deltaD, 32);
+                // bstream.append(deltaD, 64);
                 break;
             }
         }
@@ -203,4 +203,5 @@ struct CompressorLZXOR
     {
         bytes.push_back(x);
     }
+    
 };

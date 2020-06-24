@@ -4,19 +4,27 @@
 #include <cassert>
 #include <fstream>
 
-
-class BitStream
+struct BitStream
 {
-private:
     uint64_t m_size = 0;
     uint64_t *curr_bucket;
     uint64_t m_free_slots = 64;
     uint64_t m_used_slots = 0;
     bool closed = false;
 
-public:
     std::deque<uint64_t> data;
-    
+
+    BitStream() {}
+
+    BitStream(std::deque<uint64_t> &b, uint64_t m)
+    {
+        data = std::move(b);
+        m_size = m;
+        closed = true;
+        curr_bucket = &data.front();
+        m_used_slots = 64;
+    }
+
     void append(uint64_t bits, uint64_t len)
     {
         assert(!closed);

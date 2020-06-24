@@ -3,9 +3,9 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "zigzag.hpp"
-#include "BitStream.cpp"
-#include "Window.cpp"
+#include "../lib/Zigzag.hpp"
+#include "../lib/BitStream.cpp"
+#include "../lib/Window.cpp"
 
 
 struct DecompressorLZXOR
