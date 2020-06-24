@@ -54,7 +54,7 @@ To decompress the file ``compressed_data.lzx``, run the command:
 
 Benchmarks
 -----------------
-These are some comparisons between LZ-XOR with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook.
+The following tables show the comparison between LZ-XOR with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan.
 
 ### Compression Speeds (MB/s)
 
