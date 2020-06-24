@@ -15,8 +15,9 @@ We tested the code on MacOS 10.15.4 using `clang` version 11.0.3.
 
 No dependencies are needed.
 
-Just execute
-``make all``
+Just execute:
+
+    make all
 
 
 Input data format
@@ -24,9 +25,9 @@ Input data format
 The algorithm can process any `.csv` file containing numbers only.
 You need first to convert the `.csv` into `.bin` using the `csv_to_bin` utility as follows:
 
-``cd util``
+    cd util
 
-``./csv_to_bin.o path/to/MY_DATASET.csv``
+    ./csv_to_bin.o path/to/MY_DATASET.csv
 
 Please note: the first column will be interpret as the timestamp, the rest will be interpret as values.
 
@@ -38,9 +39,9 @@ Tests
 
 To run a compression test of a `.bin` file, execute the following commands:
 
-``cd test``
+    cd test
 
-``./compression.o path/to/MY_DATASET.bin``
+    ./compression.o path/to/MY_DATASET.bin
 
 This will produce a file called ``compressed_data.lzx``
 
@@ -48,4 +49,4 @@ This will produce a file called ``compressed_data.lzx``
 
 To decompress the file ``compressed_data.lzx``, run the command:
 
- ``./decompression.o``
+    ./decompression.o
