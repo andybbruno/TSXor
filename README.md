@@ -16,7 +16,7 @@ We tested the code on MacOS 10.15.4 using `clang` version 11.0.3.
 
 No dependencies are needed.
 
-Just execute:
+Just clone this repo and execute:
 
     make all
 
@@ -24,7 +24,7 @@ Just execute:
 Input data format
 -----------------
 The algorithm can process any `.csv` file containing numbers only.
-You need first to convert the `.csv` into `.bin` using the `csv_to_bin` utility as follows:
+You need first to convert the `.csv` into a `.bin` file using the `csv_to_bin` utility as follows:
 
     cd util
 
