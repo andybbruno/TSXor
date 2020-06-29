@@ -1,7 +1,7 @@
 # LZ-XOR
 [Alpha Version] LZ-XOR: A Novel Time Series Compression Algorithm
 
-Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (PISA)
+Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
 
 ##### Table of contents
 * [Building the code](#building-the-code)
