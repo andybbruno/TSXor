@@ -1,15 +1,25 @@
 #include <vector>
-#include <filesystem>
+// #include <filesystem>
 #include <numeric>
-#include "../core/DecompressorLZXOR.cpp"
-#include "../core/CompressorLZXOR.cpp"
-#include "../util/CSVReader.cpp"
+#include <chrono>
+#include <iostream>
+#include "../../core/DecompressorLZXOR.cpp"
+#include "../../core/CompressorLZXOR.cpp"
+#include "../../util/CSVReader.cpp"
+
+// stolen from folly
+template <class T>
+inline void do_not_optimize_away(T &&datum)
+{
+    asm volatile("": "+r"(datum));
+}
 
 int numLines = 0;
 
 int main(int argc, char *argv[])
 {
-    auto infile = std::ifstream("compressed_data.lzx", std::ios::out | std::ios::binary);
+    // auto infile = std::ifstream("compressed_data.lzx", std::ios::out | std::ios::binary);
+    auto infile = std::ifstream("/home/abruno/LZ-XOR/test/XOR/compressed_data.lzx", std::ios::out | std::ios::binary);
 
     uint64_t nlines;
     uint64_t ncols;
@@ -28,7 +38,7 @@ int main(int argc, char *argv[])
 
     infile.read(reinterpret_cast<char *>(&in_bits[0]),
                 bit_size * sizeof(uint64_t));
-    
+
     infile.read(reinterpret_cast<char *>(&in_bytes[0]),
                 byte_size * sizeof(uint8_t));
 
@@ -37,7 +47,20 @@ int main(int argc, char *argv[])
     auto start_dec = std::chrono::system_clock::now();
     DecompressorLZXOR dm(bits, in_bytes, ncols);
 
-    while (dm.hasNext()){}
+    int currentline = 0;
+
+    while (dm.hasNext())
+    {
+        if(++currentline == nlines)  std::cout << "fine" << std::endl;
+        // if ((++currentline % 1000) == 0)
+        // {
+        // std::cout << dm.storedTimestamp << "|";
+        // for (auto x : dm.storedVal)
+        //     std::cout << x << "|";
+        // std::cout << std::endl;
+        // std::cout << std::endl;
+        // }
+    }
 
     auto end_dec = std::chrono::system_clock::now();
     auto elapsed = (end_dec - start_dec);

@@ -1,9 +1,11 @@
 #include <vector>
-#include <filesystem>
+// #include <filesystem>
+#include <chrono>
+#include <iostream>
 #include <numeric>
-#include "../core/DecompressorLZXOR.cpp"
-#include "../core/CompressorLZXOR.cpp"
-#include "../util/CSVReader.cpp"
+#include "../../core/DecompressorLZXOR.cpp"
+#include "../../core/CompressorLZXOR.cpp"
+#include "../../util/CSVReader.cpp"
 
 int numLines = 0;
 
@@ -81,12 +83,12 @@ int main(int argc, char *argv[])
         std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl
                   << std::endl;
     }
-    
+
     auto start_dec = std::chrono::system_clock::now();
     DecompressorLZXOR dm(c.bstream, c.bytes, ncols);
-    while (dm.hasNext())
-    {
-    }
+    
+    while (dm.hasNext()){}
+    
     auto end_dec = std::chrono::system_clock::now();
     elapsed = (end_dec - start_dec);
     microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
@@ -113,7 +115,7 @@ int main(int argc, char *argv[])
             std::cout << x << "|";
         std::cout << std::endl;
 
-                std::cout.precision(2);
+        std::cout.precision(2);
         std::cout << std::fixed;
         std::cout << "A: \t" << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
         std::cout << "B: \t" << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;

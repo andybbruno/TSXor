@@ -1,9 +1,11 @@
 #include <vector>
-#include <filesystem>
+// #include <filesystem>
 #include <numeric>
-#include "../core/DecompressorLZXOR.cpp"
-#include "../core/CompressorLZXOR.cpp"
-#include "../util/CSVReader.cpp"
+#include <cmath>
+#include <chrono>
+#include "../../core/DecompressorFPC.cpp"
+#include "../../core/CompressorFPC.cpp"
+#include "../../util/CSVReader.cpp"
 
 int numLines = 0;
 
@@ -48,7 +50,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_compr = std::chrono::system_clock::now();
-    CompressorLZXOR c(times[0]);
+    CompressorFPC c(times[0]);
     for (int i = 0; i < nlines; i++)
     {
         c.addValue(times[i], values[i]);
@@ -60,7 +62,7 @@ int main(int argc, char *argv[])
     auto elapsed = (end_compr - start_compr);
     auto microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     auto original_size = 64 * nlines * (ncols + 1);
-    auto compressed_size = c.bstream.size() + (c.bytes.size() * 8);
+    auto compressed_size = c.bstream.size();
     std::cout.precision(3);
     std::cout << std::fixed;
 
@@ -72,26 +74,22 @@ int main(int argc, char *argv[])
     std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl
               << std::endl;
 
-    auto outfile = std::ofstream("compressed_data.lzx", std::ios::out | std::ios::binary);
+    auto outfile = std::ofstream("compressed_data.fpc", std::ios::out | std::ios::binary);
 
     auto bits_strm = c.bstream.data;
     auto bits_strm_msize = c.bstream.m_size;
-    auto bytes_strm = c.bytes;
+
 
     auto bit_size = bits_strm.size();
-    auto byte_size = bytes_strm.size();
+
 
     outfile.write((char *)&nlines, sizeof(uint64_t));
     outfile.write((char *)&ncols, sizeof(uint64_t));
     outfile.write((char *)&bit_size, sizeof(uint64_t));
-    outfile.write((char *)&byte_size, sizeof(uint64_t));
     outfile.write((char *)&bits_strm_msize, sizeof(uint64_t));
 
     outfile.write(reinterpret_cast<char *>(&bits_strm[0]),
                   bit_size * sizeof(uint64_t));
-
-    outfile.write(reinterpret_cast<char *>(&bytes_strm[0]),
-                  byte_size * sizeof(uint8_t));
 
     outfile.close();
 

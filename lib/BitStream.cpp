@@ -53,8 +53,8 @@ struct BitStream
     void close()
     {
         append(0x0F, 4);
-        append(UINT64_MAX, 64);
-        append(UINT64_MAX, 64);
+        append(0xFFFFFFFF, 32);
+        append(0xFFFFFFFF, 32);
         push_back(0);
         closed = true;
         m_used_slots = m_size < 64 ? m_size : 64;

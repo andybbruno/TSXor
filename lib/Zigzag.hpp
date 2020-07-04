@@ -3,13 +3,19 @@
 
 namespace zz
 {
-inline uint64_t encode(int64_t i)
-{
-    return (i >> 63) ^ (i << 1);
-}
+    inline uint32_t encode(int32_t i)
+    {
+        if (i < 0)
+            return (i * (-2)) - 1;
+        else
+            return i * 2;
+    }
 
-inline int64_t decode(uint64_t i)
-{
-    return (i >> 1) ^ (-(i & 1));
-}
-} // namespace zigzag
+    inline int32_t decode(uint32_t i)
+    {
+        if ((i % 2) == 0)
+            return (i / 2);
+        else
+            return (i + 1) / (-2);
+    }
+} // namespace zz

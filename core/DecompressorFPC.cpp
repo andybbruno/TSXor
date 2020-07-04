@@ -1,19 +1,32 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <sstream>
-#include <iostream>
+#include "fpc_utils/fpc.cpp"
 #include "../lib/Zigzag.hpp"
 #include "../lib/BitStream.cpp"
-#include "../lib/Window.cpp"
 
+// struct PairMulti
+// {
+//     long timestamp;
+//     std::vector<double> value;
 
-struct DecompressorLZXOR
+//     PairMulti(uint64_t t, std::vector<double> const &v) : timestamp(t), value(v) {}
+
+//     std::string toString()
+//     {
+//         std::string tmp = std::to_string(timestamp);
+//         for (auto d : value)
+//         {
+//             tmp = tmp + " | " + std::to_string(d);
+//         }
+//         return tmp;
+//     }
+// };
+
+struct DecompressorFPC
 {
-    std::vector<Window> cache;
+    std::vector<FPC> fpc;
 
-    std::vector<uint64_t> storedLeadingZeros;
-    std::vector<uint64_t> storedTrailingZeros;
     std::vector<double> storedVal;
     uint8_t FIRST_DELTA_BITS = 32;
 
@@ -27,16 +40,12 @@ struct DecompressorLZXOR
     BitStream in;
     uint64_t ncols;
 
-    std::vector<uint8_t> bytes;
-    uint64_t current_idx = 0;
-
-    DecompressorLZXOR(BitStream &input, std::vector<uint8_t> &bts, uint64_t n)
+    DecompressorFPC(BitStream const &input, uint64_t n)
     {
         in = input;
         ncols = n;
-        bytes = bts;
         storedVal = std::vector<double>(ncols, 0);
-        cache = std::vector<Window>(ncols);
+        fpc = std::vector<FPC>(ncols);
         readHeader();
     }
 
@@ -44,6 +53,20 @@ struct DecompressorLZXOR
     {
         blockTimestamp = in.get(64);
     }
+
+    /**
+     * Returns the next pair in the time series, if available.
+     *
+     * @return Pair if there's next value, null if series is done.
+     */
+    // PairMulti readPair()
+    // {
+    //     // if (endOfStream)
+    //     // {
+    //     //     return null;
+    //     // }
+    //     return PairMulti(storedTimestamp, storedVal);
+    // }
 
     bool hasNext()
     {
@@ -55,6 +78,7 @@ struct DecompressorLZXOR
     {
         if (storedTimestamp == 0)
         {
+            // First item to read
             storedDelta = in.get(FIRST_DELTA_BITS);
 
             if (storedDelta == 0xFFFFFFFF)
@@ -64,10 +88,10 @@ struct DecompressorLZXOR
             }
             for (int i = 0; i < ncols; i++)
             {
-                uint64_t read = readBytes(8);
-                cache[i].insert(read);
-                double p = (*(double *)&read);
-                storedVal[i] = p;
+                uint64_t read = in.get(64);
+                double *p = (double *)&read;
+                storedVal[i] = *p;
+                fpc[i].head(*p);
             }
             storedTimestamp = blockTimestamp + storedDelta;
         }
@@ -135,52 +159,15 @@ struct DecompressorLZXOR
 
     void nextValue()
     {
-        uint64_t final_val;
-        uint64_t offset;
-        uint64_t info;
-        uint64_t trail_zeros_bytes;
-        uint64_t xor_bytes;
-        uint64_t xor_;
-        uint64_t head;
         for (int i = 0; i < ncols; i++)
         {
-            head = readBytes(1);
+            bool use_fcm = in.get(1);
+            auto zeros = in.get(3);
+            auto body = in.get(64 - (8 * zeros));
 
-            if (head < 128)
-            {
-                final_val = cache[i].get(head);
-            }
-            else if (head == 255)
-            {
-                final_val = readBytes(8);
-            }
-            else
-            {
-                offset = head & (~((UINT64_MAX << 7)));
-                info = readBytes(1);
-                trail_zeros_bytes = info >> 4;
-                xor_bytes = info & (~((UINT64_MAX << 4)));
-                xor_ = readBytes(xor_bytes) << (8 * trail_zeros_bytes);
-                final_val = xor_ ^ cache[i].get(offset);
-            }
-            cache[i].insert(final_val);
-            double p = (*(double *)&final_val);
-            storedVal[i] = p;
-        }
-    }
+            double dec = fpc[i].decode(use_fcm, body);
 
-    inline uint64_t readBytes(size_t len)
-    {
-        uint64_t val = 0;
-        for (int i = 0; i < len; i++)
-        {
-            val |= bytes[current_idx];
-            current_idx++;
-            if (i != (len - 1))
-            {
-                val <<= 8;
-            }
+            storedVal[i] = dec;
         }
-        return val;
     }
 };
