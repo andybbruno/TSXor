@@ -32,7 +32,6 @@
 *.app
 
 *.dSYM
-/dataset
 .DS_Store
 *.bin
 test_readcsv.dSYM
@@ -43,3 +42,4 @@ test_readcsv.dSYM
 /dct
 /_ANALYSIS
 /_OLD_VERSION
+/dataset
