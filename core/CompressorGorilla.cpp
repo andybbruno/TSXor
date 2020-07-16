@@ -8,7 +8,7 @@
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
-struct CompressorMulti
+struct CompressorGorilla
 {
     uint8_t FIRST_DELTA_BITS = 32;
 
@@ -27,7 +27,7 @@ struct CompressorMulti
 
     BitStream out;
 
-    CompressorMulti(uint64_t timestamp)
+    CompressorGorilla(uint64_t timestamp)
     {
         blockTimestamp = timestamp;
         addHeader(timestamp);

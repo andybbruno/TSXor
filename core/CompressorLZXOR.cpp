@@ -190,7 +190,7 @@ struct CompressorLZXOR
         }
     }
 
-    inline void append64(uint64_t x)
+    void append64(uint64_t x)
     {
         uint8_t *b = (uint8_t *)&x;
         for (int i = 7; i >= 0; i--)
@@ -199,7 +199,7 @@ struct CompressorLZXOR
         }
     }
 
-    inline void append8(uint8_t x)
+    void append8(uint8_t x)
     {
         bytes.push_back(x);
     }

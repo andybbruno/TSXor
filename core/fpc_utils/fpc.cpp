@@ -1,12 +1,11 @@
 #pragma once
 #include <vector>
+#include <cassert>
 #include "Predictors/dfcm.cpp"
 #include "Predictors/fcm.cpp"
 
-class FPC
+struct FPC
 {
-private:
-public:
     size_t log_size = 16;
     FCM fcm{log_size};
     DFCM dfcm{log_size};
@@ -32,8 +31,17 @@ public:
         uint64_t fcm_xor = fcm.getPrediction() ^ d_int;
         uint64_t dfcm_xor = dfcm.getPrediction() ^ d_int;
 
-        auto fcm_zeros = __builtin_clzll(fcm_xor) % 65535;
-        auto dfcm_zeros = __builtin_clzll(dfcm_xor) % 65535;
+        uint64_t fcm_zeros = 0;
+        uint64_t dfcm_zeros = 0;
+
+        if (fcm_xor != 0)
+        {
+            fcm_zeros = __builtin_clzll(fcm_xor);
+        }
+        if (dfcm_zeros != 0)
+        {
+            dfcm_zeros = __builtin_clzll(dfcm_xor);
+        }
 
         bool fcm_is_better = (fcm_zeros > dfcm_zeros);
 

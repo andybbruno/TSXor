@@ -81,7 +81,7 @@ struct DecompressorFPC
             // First item to read
             storedDelta = in.get(FIRST_DELTA_BITS);
 
-            if (storedDelta == 0xFFFFFFFF)
+            if (storedDelta == UINT32_MAX)
             {
                 endOfStream = true;
                 return;

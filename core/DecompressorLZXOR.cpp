@@ -57,7 +57,7 @@ struct DecompressorLZXOR
         {
             storedDelta = in.get(FIRST_DELTA_BITS);
 
-            if (storedDelta == 0xFFFFFFFF)
+            if (storedDelta == UINT32_MAX)
             {
                 endOfStream = true;
                 return;
@@ -169,7 +169,7 @@ struct DecompressorLZXOR
         }
     }
 
-    inline uint64_t readBytes(size_t len)
+    uint64_t readBytes(size_t len)
     {
         uint64_t val = 0;
         for (int i = 0; i < len; i++)

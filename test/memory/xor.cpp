@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
         std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
         std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
         std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl;
+        std::cout << "Throughput 3:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << " MB/s" << std::endl;
         // std::cout << "Original size: \t\t" << original_size << " Bits" << std::endl;
         // std::cout << "Compressed size: \t" << compressed_size << " Bits" << std::endl;
         std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl
@@ -104,7 +105,8 @@ int main(int argc, char *argv[])
         std::cout << "*** DECOMPRESSION ***" << std::endl;
         std::cout << "Computed in:         \t" << ((double)microsec / 1000) << " msec" << std::endl;
         std::cout << "Throughput 1:          \t" << (double)nlines / ((double)microsec) << " M Lines/s" << std::endl;
-        std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl
+        std::cout << "Throughput 2:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << " M Value/s" << std::endl;
+        std::cout << "Throughput 3:          \t" << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << " MB/s" << std::endl
                   << std::endl;
 
         std::cout.precision(6);

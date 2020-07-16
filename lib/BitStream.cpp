@@ -18,7 +18,7 @@ struct BitStream
 
     BitStream(std::deque<uint64_t> &b, uint64_t m)
     {
-        data = std::move(b);
+        data = b;
         m_size = m;
         closed = true;
         curr_bucket = &data.front();
@@ -53,15 +53,18 @@ struct BitStream
     void close()
     {
         append(0x0F, 4);
-        append(0xFFFFFFFF, 32);
-        append(0xFFFFFFFF, 32);
+        append(UINT64_MAX, 64);
+        append(UINT64_MAX, 64);
+        append(UINT64_MAX, 64);
+        append(UINT64_MAX, 64);
+        data.push_back(UINT64_MAX);
         push_back(0);
         closed = true;
         m_used_slots = m_size < 64 ? m_size : 64;
         curr_bucket = &data.front();
     }
 
-    inline void push_back(bool b)
+    void push_back(bool b)
     {
         assert(!closed);
         append(b, 1);
@@ -110,7 +113,7 @@ struct BitStream
         return t_bits;
     }
 
-    inline uint64_t nextZeroWithin(size_t len)
+    uint64_t nextZeroWithin(size_t len)
     {
         uint64_t t = get(1);
         uint64_t res = t;
@@ -124,7 +127,7 @@ struct BitStream
         return res;
     }
 
-    inline bool readBit()
+    bool readBit()
     {
         return (bool)get(1);
     }

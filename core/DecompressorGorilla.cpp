@@ -22,7 +22,7 @@
 //     }
 // };
 
-struct DecompressorMulti
+struct DecompressorGorilla
 {
 
     std::vector<uint64_t> storedLeadingZeros;
@@ -40,7 +40,7 @@ struct DecompressorMulti
     BitStream in;
     uint64_t ncols;
 
-    DecompressorMulti(BitStream const &input, uint64_t n)
+    DecompressorGorilla(BitStream const &input, uint64_t n)
     {
         in = input;
         ncols = n;
@@ -84,7 +84,7 @@ struct DecompressorMulti
             // First item to read
             storedDelta = in.get(FIRST_DELTA_BITS);
 
-            if (storedDelta == 0xFFFFFFFF)
+            if (storedDelta == UINT32_MAX)
             {
                 endOfStream = true;
                 return;
