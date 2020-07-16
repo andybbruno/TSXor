@@ -5,106 +5,50 @@
 #include "../lib/Zigzag.hpp"
 #include "../lib/BitStream.cpp"
 
-// struct PairMulti
-// {
-//     long timestamp;
-//     std::vector<double> value;
-
-//     PairMulti(uint64_t t, std::vector<double> const &v) : timestamp(t), value(v) {}
-
-//     std::string toString()
-//     {
-//         std::string tmp = std::to_string(timestamp);
-//         for (auto d : value)
-//         {
-//             tmp = tmp + " | " + std::to_string(d);
-//         }
-//         return tmp;
-//     }
-// };
-
 struct DecompressorFPC
 {
     std::vector<FPC> fpc;
 
     std::vector<double> storedVal;
-    uint8_t FIRST_DELTA_BITS = 32;
 
     uint64_t storedTimestamp = 0;
     uint64_t storedDelta = 0;
-    uint64_t blockTimestamp = 0;
 
     bool endOfStream = false;
 
-    // BitVector in;
-    BitStream in;
+    BitStream bs_times;
+    BitStream bs_values;
     uint64_t ncols;
 
-    DecompressorFPC(BitStream const &input, uint64_t n)
+    DecompressorFPC(BitStream const &bs_ts, BitStream const &bs_val, uint64_t n)
     {
-        in = input;
+        bs_times = bs_ts;
+        bs_values = bs_val;
         ncols = n;
         storedVal = std::vector<double>(ncols, 0);
         fpc = std::vector<FPC>(ncols);
-        readHeader();
-    }
 
-    void readHeader()
-    {
-        blockTimestamp = in.get(64);
-    }
+        storedTimestamp = bs_times.get(64);
 
-    /**
-     * Returns the next pair in the time series, if available.
-     *
-     * @return Pair if there's next value, null if series is done.
-     */
-    // PairMulti readPair()
-    // {
-    //     // if (endOfStream)
-    //     // {
-    //     //     return null;
-    //     // }
-    //     return PairMulti(storedTimestamp, storedVal);
-    // }
+        for (int i = 0; i < ncols; i++)
+        {
+            uint64_t read = bs_values.get(64);
+            double *p = (double *)&read;
+            storedVal[i] = *p;
+        }
+    }
 
     bool hasNext()
     {
-        next();
+        nextTimestamp();
+        if (endOfStream == false)
+            nextValue();
         return !endOfStream;
-    }
-
-    void next()
-    {
-        if (storedTimestamp == 0)
-        {
-            // First item to read
-            storedDelta = in.get(FIRST_DELTA_BITS);
-
-            if (storedDelta == UINT32_MAX)
-            {
-                endOfStream = true;
-                return;
-            }
-            for (int i = 0; i < ncols; i++)
-            {
-                uint64_t read = in.get(64);
-                double *p = (double *)&read;
-                storedVal[i] = *p;
-                fpc[i].head(*p);
-            }
-            storedTimestamp = blockTimestamp + storedDelta;
-        }
-        else
-        {
-            nextTimestamp();
-            // nextValue();
-        }
     }
 
     uint64_t bitsToRead()
     {
-        uint64_t val = in.nextZeroWithin(4);
+        uint64_t val = bs_times.nextZeroWithin(4);
         uint64_t toRead = 0;
 
         switch (val)
@@ -136,34 +80,29 @@ struct DecompressorFPC
         uint64_t toRead = bitsToRead();
         if (toRead > 0)
         {
-            deltaDelta = in.get(toRead);
+            deltaDelta = bs_times.get(toRead);
             if (toRead == 32)
-            // if (toRead == 64)
             {
                 if (deltaDelta == UINT32_MAX)
-                // if (deltaDelta == UINT64_MAX)
                 {
-                    // End of stream
                     endOfStream = true;
                     return;
                 }
             }
             deltaDelta = zz::decode(deltaDelta);
-            // deltaDelta = (int)(deltaDelta);
         }
 
         storedDelta = storedDelta + deltaDelta;
         storedTimestamp = storedDelta + storedTimestamp;
-        nextValue();
     }
 
     void nextValue()
     {
         for (int i = 0; i < ncols; i++)
         {
-            bool use_fcm = in.get(1);
-            auto zeros = in.get(3);
-            auto body = in.get(64 - (8 * zeros));
+            bool use_fcm = bs_values.get(1);
+            auto zeros = bs_values.get(3);
+            auto body = bs_values.get(64 - (8 * zeros));
 
             double dec = fpc[i].decode(use_fcm, body);
 

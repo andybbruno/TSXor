@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_compr = std::chrono::system_clock::now();
-    CompressorLZXOR c(times[0]);
+    CompressorLZXOR c(times[0], values[0]);
     for (int i = 0; i < nlines; i++)
     {
         c.addValue(times[i], values[i]);
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     auto elapsed = (end_compr - start_compr);
     auto microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     auto original_size = 64 * nlines * (ncols + 1);
-    auto compressed_size = c.bstream.size() + (c.bytes.size() * 8);
+    auto compressed_size = c.bs_times.size() + (c.bt_values.size() * 8);
     std::cout.precision(3);
     std::cout << std::fixed;
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_dec = std::chrono::system_clock::now();
-    DecompressorLZXOR dm(c.bstream, c.bytes, ncols);
+    DecompressorLZXOR dm(c.bs_times, c.bt_values, ncols);
     
     while (dm.hasNext()){}
     
@@ -117,12 +117,12 @@ int main(int argc, char *argv[])
             std::cout << x << "|";
         std::cout << std::endl;
 
-        std::cout.precision(2);
-        std::cout << std::fixed;
-        std::cout << "A: \t" << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << "B: \t" << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << "C: \t" << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
-        std::cout << "B  -->  " << ((double)c.countB_bytes / (c.countB)) << " bytes" << std::endl;
+        // std::cout.precision(2);
+        // std::cout << std::fixed;
+        // std::cout << "A: \t" << ((double)c.countA / (nlines * ncols)) * 100 << "%" << std::endl;
+        // std::cout << "B: \t" << ((double)c.countB / (nlines * ncols)) * 100 << "%" << std::endl;
+        // std::cout << "C: \t" << ((double)c.countC / (nlines * ncols)) * 100 << "%" << std::endl;
+        // std::cout << "B  -->  " << ((double)c.countB_bytes / (c.countB)) << " bytes" << std::endl;
     }
 
     return 0;

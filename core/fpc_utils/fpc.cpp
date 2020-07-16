@@ -58,7 +58,7 @@ struct FPC
             code = bytesize(fcm_zeros);
             code |= 0x08;
             // std::cout << bytesize(fcm_zeros) << " --- " << code << " --- " << fcm_xor << std::endl;
-            return std::pair(code, fcm_xor);
+            return std::pair<uint64_t, uint64_t>(code, fcm_xor);
         }
         else
         {
@@ -69,7 +69,7 @@ struct FPC
 
             code = bytesize(dfcm_zeros);
             // std::cout << bytesize(dfcm_zeros) << " -#- " << code << " -#- " << dfcm_zeros << std::endl;
-            return std::pair(code, dfcm_xor);
+            return std::pair<uint64_t, uint64_t>(code, dfcm_xor);
         }
     }
 

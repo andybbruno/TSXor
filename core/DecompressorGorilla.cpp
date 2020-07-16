@@ -4,109 +4,51 @@
 #include "../lib/BitStream.cpp"
 #include "../lib/Zigzag.hpp"
 
-// struct PairMulti
-// {
-//     long timestamp;
-//     std::vector<double> value;
-
-//     PairMulti(uint64_t t, std::vector<double> const &v) : timestamp(t), value(v) {}
-
-//     std::string toString()
-//     {
-//         std::string tmp = std::to_string(timestamp);
-//         for (auto d : value)
-//         {
-//             tmp = tmp + " | " + std::to_string(d);
-//         }
-//         return tmp;
-//     }
-// };
-
 struct DecompressorGorilla
 {
-
     std::vector<uint64_t> storedLeadingZeros;
     std::vector<uint64_t> storedTrailingZeros;
     std::vector<double> storedVal;
-    uint8_t FIRST_DELTA_BITS = 32;
 
     uint64_t storedTimestamp = 0;
     uint64_t storedDelta = 0;
-    uint64_t blockTimestamp = 0;
 
     bool endOfStream = false;
 
-    // BitVector in;
-    BitStream in;
+    BitStream bs_times;
+    BitStream bs_values;
     uint64_t ncols;
 
-    DecompressorGorilla(BitStream const &input, uint64_t n)
+    DecompressorGorilla(BitStream const &bs_ts, BitStream const &bs_val, uint64_t n)
     {
-        in = input;
+        bs_times = bs_ts;
+        bs_values = bs_val;
         ncols = n;
-
         storedLeadingZeros = std::vector<uint64_t>(ncols, 0);
         storedTrailingZeros = std::vector<uint64_t>(ncols, 0);
         storedVal = std::vector<double>(ncols, 0);
 
-        readHeader();
-    }
+        storedTimestamp = bs_times.get(64);
 
-    void readHeader()
-    {
-        blockTimestamp = in.get(64);
+        for (int i = 0; i < ncols; i++)
+        {
+            uint64_t read = bs_values.get(64);
+            double *p = (double *)&read;
+            storedVal[i] = *p;
+        }
     }
-
-    /**
-     * Returns the next pair in the time series, if available.
-     *
-     * @return Pair if there's next value, null if series is done.
-     */
-    // PairMulti readPair()
-    // {
-    //     // if (endOfStream)
-    //     // {
-    //     //     return null;
-    //     // }
-    //     return PairMulti(storedTimestamp, storedVal);
-    // }
 
     bool hasNext()
     {
-        next();
+        nextTimestamp();
+        if (endOfStream == false)
+            nextValue();
         return !endOfStream;
-    }
-
-    void next()
-    {
-        if (storedTimestamp == 0)
-        {
-            // First item to read
-            storedDelta = in.get(FIRST_DELTA_BITS);
-
-            if (storedDelta == UINT32_MAX)
-            {
-                endOfStream = true;
-                return;
-            }
-            for (int i = 0; i < ncols; i++)
-            {
-                uint64_t read = in.get(64);
-                double *p = (double *)&read;
-                storedVal[i] = *p;
-            }
-            storedTimestamp = blockTimestamp + storedDelta;
-        }
-        else
-        {
-            nextTimestamp();
-            // nextValue();
-        }
     }
 
     uint64_t bitsToRead()
     {
-        uint64_t val = in.nextZeroWithin(4);
+        uint64_t val = bs_times.nextZeroWithin(4);
         uint64_t toRead = 0;
 
         switch (val)
@@ -138,25 +80,20 @@ struct DecompressorGorilla
         uint64_t toRead = bitsToRead();
         if (toRead > 0)
         {
-            deltaDelta = in.get(toRead);
+            deltaDelta = bs_times.get(toRead);
             if (toRead == 32)
-            // if (toRead == 64)
             {
                 if (deltaDelta == UINT32_MAX)
-                // if (deltaDelta == UINT64_MAX)
                 {
-                    // End of stream
                     endOfStream = true;
                     return;
                 }
             }
             deltaDelta = zz::decode(deltaDelta);
-            // deltaDelta = (int)(deltaDelta);
         }
 
         storedDelta = storedDelta + deltaDelta;
         storedTimestamp = storedDelta + storedTimestamp;
-        nextValue();
     }
 
     void nextValue()
@@ -165,22 +102,22 @@ struct DecompressorGorilla
         {
             // Read value
             // If 1 means that the value has not changed, hence no ops perfomed
-            if (in.readBit())
+            if (bs_values.readBit())
             {
                 // else -> same value as before
-                if (in.readBit())
+                if (bs_values.readBit())
                 {
                     // New leading and trailing zeros
-                    storedLeadingZeros[i] = in.get(5);
+                    storedLeadingZeros[i] = bs_values.get(5);
 
-                    uint64_t significantBits = in.get(6);
+                    uint64_t significantBits = bs_values.get(6);
                     if (significantBits == 0)
                     {
                         significantBits = 64;
                     }
                     storedTrailingZeros[i] = 64 - significantBits - storedLeadingZeros[i];
                 }
-                uint64_t value = in.get(64 - storedLeadingZeros[i] - storedTrailingZeros[i]);
+                uint64_t value = bs_values.get(64 - storedLeadingZeros[i] - storedTrailingZeros[i]);
                 value <<= storedTrailingZeros[i];
 
                 uint64_t *a = (uint64_t *)&storedVal[i];

@@ -10,69 +10,56 @@
 
 struct CompressorGorilla
 {
-    uint8_t FIRST_DELTA_BITS = 32;
-
     std::vector<uint64_t> storedLeadingZeros;
     std::vector<uint64_t> storedTrailingZeros;
     std::vector<double> storedValues;
+
     long storedTimestamp = 0;
     long storedDelta = 0;
-    long blockTimestamp = 0;
 
-    uint countA = 0;
-    uint countB = 0;
-    uint countC = 0;
-    std::vector<uint64_t> countB_vec;
-    std::vector<uint64_t> countC_vec;
+    BitStream bs_times;
+    BitStream bs_values;
 
-    BitStream out;
+    // uint countA = 0;
+    // uint countB = 0;
+    // uint countC = 0;
+    // std::vector<uint64_t> countB_vec;
+    // std::vector<uint64_t> countC_vec;
 
-    CompressorGorilla(uint64_t timestamp)
+
+    CompressorGorilla(uint64_t timestamp, std::vector<double> const &values)
     {
-        blockTimestamp = timestamp;
-        addHeader(timestamp);
-    }
+        bs_times.append(timestamp, 64);
 
-    void addHeader(uint64_t timestamp)
-    {
-        out.append(timestamp, 64);
+        for (double d : values)
+        {
+            uint64_t *x = (uint64_t *)&d;
+            bs_values.append(*x, 64);
+        }
+
+        storedTimestamp = timestamp;
+        storedValues = values;
+        storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
+        storedTrailingZeros = std::vector<uint64_t>(values.size(), 64);
     }
 
     void addValue(uint64_t timestamp, std::vector<double> const &vals)
     {
-        if (storedTimestamp == 0)
-        {
-            writeFirst(timestamp, vals);
-        }
-        else
-        {
-            compressTimestamp(timestamp);
-            compressValue(vals);
-        }
-    }
-
-    void writeFirst(uint64_t timestamp, std::vector<double> const &values)
-    {
-        storedDelta = timestamp - blockTimestamp;
-        storedTimestamp = timestamp;
-        storedValues = values;
-
-        out.append(storedDelta, FIRST_DELTA_BITS);
-        for (double d : values)
-        {
-            uint64_t *x = (uint64_t *)&d;
-            out.append(*x, 64);
-        }
-
-        storedLeadingZeros = std::vector<uint64_t>(values.size(), 0);
-        storedTrailingZeros = std::vector<uint64_t>(values.size(), 64);
-        countB_vec = std::vector<uint64_t>(9, 0);
-        countC_vec = std::vector<uint64_t>(10, 0);
+        compressTimestamp(timestamp);
+        compressValue(vals);
     }
 
     void close()
     {
-        out.close();
+        bs_times.append(0x0F, 4);
+        bs_times.append(UINT32_MAX, 32);
+        //padding
+        bs_times.append(0, 64);
+        bs_times.close();
+
+        //padding
+        bs_values.append(0, 64);
+        bs_values.close();
     }
 
     void compressTimestamp(long timestamp)
@@ -83,7 +70,7 @@ struct CompressorGorilla
 
         if (deltaD == 0)
         {
-            out.push_back(0);
+            bs_times.push_back(0);
         }
         else
         {
@@ -101,26 +88,25 @@ struct CompressorGorilla
             case 7:
                 //DELTA_7_MASK adds '10' to deltaD
                 deltaD |= DELTA_7_MASK;
-                out.append(deltaD, 9);
+                bs_times.append(deltaD, 9);
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to deltaD
                 deltaD |= DELTA_9_MASK;
-                out.append(deltaD, 12);
+                bs_times.append(deltaD, 12);
                 break;
             case 10:
             case 11:
             case 12:
                 //DELTA_12_MASK adds '1110' to deltaD
                 deltaD |= DELTA_12_MASK;
-                out.append(deltaD, 16);
+                bs_times.append(deltaD, 16);
                 break;
             default:
                 // Append '1111'
-                out.append(0x0F, 4);
-                out.append(deltaD, 32);
-                // out.append(deltaD, 64);
+                bs_times.append(0x0F, 4);
+                bs_times.append(deltaD, 32);
                 break;
             }
         }
@@ -142,15 +128,14 @@ struct CompressorGorilla
             if (xor_ == 0)
             {
                 // Write 0
-                out.push_back(0);
-                countA++;
+                bs_values.push_back(0);
+                // countA++;
             }
             else
             {
                 int leadingZeros = __builtin_clzll(xor_);
                 int trailingZeros = __builtin_ctzll(xor_);
 
-                // Check overflow of leading? Can't be 32!
                 if (leadingZeros >= 32)
                 {
                     leadingZeros = 31;
@@ -163,18 +148,17 @@ struct CompressorGorilla
                 }
 
                 // Store bit '1'
-                out.push_back(1);
+                bs_values.push_back(1);
 
                 if (leadingZeros >= storedLeadingZeros[i] && trailingZeros >= storedTrailingZeros[i])
                 {
-                    out.push_back(0);
+                    bs_values.push_back(0);
                     int significantBits = 64 - storedLeadingZeros[i] - storedTrailingZeros[i];
                     xor_ >>= storedTrailingZeros[i];
-                    out.append(xor_, significantBits);
-                    countB++;
-
-                    auto bucket = (2 + significantBits) / 8;
-                    countB_vec[bucket]++;
+                    bs_values.append(xor_, significantBits);
+                    // countB++;
+                    // auto bucket = (2 + significantBits) / 8;
+                    // countB_vec[bucket]++;
                 }
                 else
                 {
@@ -183,15 +167,15 @@ struct CompressorGorilla
 
                     int significantBits = 64 - leadingZeros - trailingZeros;
 
-                    out.append((((0x20 ^ leadingZeros) << 6) ^ (significantBits)), 12);
-                    xor_ >>= trailingZeros;            // Length of meaningful bits in the next 6 bits
-                    out.append(xor_, significantBits); // Store the meaningful bits of XOR
+                    bs_values.append((((0x20 ^ leadingZeros) << 6) ^ (significantBits)), 12);
+                    xor_ >>= trailingZeros;                  // Length of meaningful bits in the next 6 bits
+                    bs_values.append(xor_, significantBits); // Store the meaningful bits of XOR
 
                     storedLeadingZeros[i] = leadingZeros;
                     storedTrailingZeros[i] = trailingZeros;
-                    countC++;
-                    auto bucket = (13 + significantBits) / 8;
-                    countC_vec[bucket]++;
+                    // countC++;
+                    // auto bucket = (13 + significantBits) / 8;
+                    // countC_vec[bucket]++;
                 }
             }
             storedValues[i] = values[i];

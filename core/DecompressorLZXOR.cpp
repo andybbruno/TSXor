@@ -7,80 +7,52 @@
 #include "../lib/BitStream.cpp"
 #include "../lib/Window.cpp"
 
-
 struct DecompressorLZXOR
 {
-    std::vector<Window> cache;
-
-    std::vector<uint64_t> storedLeadingZeros;
-    std::vector<uint64_t> storedTrailingZeros;
     std::vector<double> storedVal;
-    uint8_t FIRST_DELTA_BITS = 32;
 
     uint64_t storedTimestamp = 0;
     uint64_t storedDelta = 0;
-    uint64_t blockTimestamp = 0;
-
+    uint64_t current_idx = 0;
+    
     bool endOfStream = false;
 
-    // BitVector in;
-    BitStream in;
+    BitStream bs_times;
+    std::vector<uint8_t> bt_values;
+    std::vector<Window> window;
+
     uint64_t ncols;
 
-    std::vector<uint8_t> bytes;
-    uint64_t current_idx = 0;
-
-    DecompressorLZXOR(BitStream &input, std::vector<uint8_t> &bts, uint64_t n)
+    DecompressorLZXOR(BitStream &bs_ts, std::vector<uint8_t> &bt_val, uint64_t n)
     {
-        in = input;
+        bs_times = bs_ts;
+        bt_values = bt_val;
         ncols = n;
-        bytes = bts;
         storedVal = std::vector<double>(ncols, 0);
-        cache = std::vector<Window>(ncols);
-        readHeader();
-    }
+        window = std::vector<Window>(ncols);
 
-    void readHeader()
-    {
-        blockTimestamp = in.get(64);
+        storedTimestamp = bs_times.get(64);
+
+        for (int i = 0; i < ncols; i++)
+        {
+            uint64_t read = readBytes(8);
+            window[i].insert(read);
+            double p = (*(double *)&read);
+            storedVal[i] = p;
+        }
     }
 
     bool hasNext()
     {
-        next();
+        nextTimestamp();
+        if (endOfStream == false)
+            nextValue();
         return !endOfStream;
-    }
-
-    void next()
-    {
-        if (storedTimestamp == 0)
-        {
-            storedDelta = in.get(FIRST_DELTA_BITS);
-
-            if (storedDelta == UINT32_MAX)
-            {
-                endOfStream = true;
-                return;
-            }
-            for (int i = 0; i < ncols; i++)
-            {
-                uint64_t read = readBytes(8);
-                cache[i].insert(read);
-                double p = (*(double *)&read);
-                storedVal[i] = p;
-            }
-            storedTimestamp = blockTimestamp + storedDelta;
-        }
-        else
-        {
-            nextTimestamp();
-            // nextValue();
-        }
     }
 
     uint64_t bitsToRead()
     {
-        uint64_t val = in.nextZeroWithin(4);
+        uint64_t val = bs_times.nextZeroWithin(4);
         uint64_t toRead = 0;
 
         switch (val)
@@ -112,14 +84,11 @@ struct DecompressorLZXOR
         uint64_t toRead = bitsToRead();
         if (toRead > 0)
         {
-            deltaDelta = in.get(toRead);
+            deltaDelta = bs_times.get(toRead);
             if (toRead == 32)
-            // if (toRead == 64)
             {
                 if (deltaDelta == UINT32_MAX)
-                // if (deltaDelta == UINT64_MAX)
                 {
-                    // End of stream
                     endOfStream = true;
                     return;
                 }
@@ -130,7 +99,6 @@ struct DecompressorLZXOR
 
         storedDelta = storedDelta + deltaDelta;
         storedTimestamp = storedDelta + storedTimestamp;
-        nextValue();
     }
 
     void nextValue()
@@ -148,7 +116,7 @@ struct DecompressorLZXOR
 
             if (head < 128)
             {
-                final_val = cache[i].get(head);
+                final_val = window[i].get(head);
             }
             else if (head == 255)
             {
@@ -161,9 +129,9 @@ struct DecompressorLZXOR
                 trail_zeros_bytes = info >> 4;
                 xor_bytes = info & (~((UINT64_MAX << 4)));
                 xor_ = readBytes(xor_bytes) << (8 * trail_zeros_bytes);
-                final_val = xor_ ^ cache[i].get(offset);
+                final_val = xor_ ^ window[i].get(offset);
             }
-            cache[i].insert(final_val);
+            window[i].insert(final_val);
             double p = (*(double *)&final_val);
             storedVal[i] = p;
         }
@@ -174,7 +142,7 @@ struct DecompressorLZXOR
         uint64_t val = 0;
         for (int i = 0; i < len; i++)
         {
-            val |= bytes[current_idx];
+            val |= bt_values[current_idx];
             current_idx++;
             if (i != (len - 1))
             {

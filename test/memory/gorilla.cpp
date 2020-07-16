@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
     }
 
     auto start_compr = std::chrono::system_clock::now();
-    CompressorGorilla c(times[0]);
-    for (int i = 0; i < nlines; i++)
+    CompressorGorilla c(times[0], values[0]);
+    for (int i = 1; i < nlines; i++)
     {
         c.addValue(times[i], values[i]);
     }
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     auto elapsed = (end_compr - start_compr);
     auto microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     auto original_size = 64 * nlines * (ncols + 1);
-    auto compressed_size = c.out.size();
+    auto compressed_size = c.bs_times.size() + c.bs_values.size();
     std::cout.precision(3);
     std::cout << std::fixed;
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_dec = std::chrono::system_clock::now();
-    DecompressorGorilla dm(c.out, ncols);
+    DecompressorGorilla dm(c.bs_times, c.bs_values, ncols);
 
     while (dm.hasNext())
     {
