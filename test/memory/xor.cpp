@@ -6,6 +6,7 @@
 #include "../../core/DecompressorLZXOR.cpp"
 #include "../../core/CompressorLZXOR.cpp"
 #include "../../util/CSVReader.cpp"
+#include "../../lib/Window.cpp"
 
 int numLines = 0;
 
@@ -68,7 +69,9 @@ int main(int argc, char *argv[])
 
     if (printAsCSV)
     {
-        std::cout << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << ",";
+        // std::cout << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << ",";
+
+        std::cout << "xor" << WINDOW_SIZE << "," << filename << "," << ((double)original_size / compressed_size);
     }
     else
     {
@@ -96,7 +99,7 @@ int main(int argc, char *argv[])
 
     if (printAsCSV)
     {
-        std::cout << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << std::endl;
+        // std::cout << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << std::endl;
     }
     else
     {

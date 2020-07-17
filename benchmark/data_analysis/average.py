@@ -2,7 +2,7 @@ import os
 import glob
 import pandas as pd
 
-path = '/home/abruno/LZ-XOR/benchmark/results'
+path = '/home/abruno/LZ-XOR/benchmark/results/xor'
 pathlist = sorted(os.listdir(path))
 
 for filename in pathlist:
