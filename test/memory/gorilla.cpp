@@ -68,9 +68,7 @@ int main(int argc, char *argv[])
 
     if (printAsCSV)
     {
-        std::cout << ((double)microsec / 1000) << ","
-                  << (double)nlines / ((double)microsec) << ","
-                  << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << ",";
+        std::cout << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << ",";
     }
     else
     {
@@ -98,9 +96,7 @@ int main(int argc, char *argv[])
 
     if (printAsCSV)
     {
-        std::cout << ((double)microsec / 1000) << ","
-                  << (double)nlines / ((double)microsec) << ","
-                  << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << std::endl;
+        std::cout << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << std::endl;
     }
     else
     {

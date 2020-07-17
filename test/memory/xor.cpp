@@ -68,9 +68,7 @@ int main(int argc, char *argv[])
 
     if (printAsCSV)
     {
-        std::cout << ((double)microsec / 1000) << ","
-                  << (double)nlines / ((double)microsec) << ","
-                  << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << ",";
+        std::cout << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << ",";
     }
     else
     {
@@ -87,18 +85,18 @@ int main(int argc, char *argv[])
 
     auto start_dec = std::chrono::system_clock::now();
     DecompressorLZXOR dm(c.bs_times, c.bt_values, ncols);
-    
-    while (dm.hasNext()){}
-    
+
+    while (dm.hasNext())
+    {
+    }
+
     auto end_dec = std::chrono::system_clock::now();
     elapsed = (end_dec - start_dec);
     microsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 
     if (printAsCSV)
     {
-        std::cout << ((double)microsec / 1000) << ","
-                  << (double)nlines / ((double)microsec) << ","
-                  << ((double)(nlines * (ncols + 1)) / ((double)microsec)) << std::endl;
+        std::cout << ((double)(nlines * (ncols + 1)) / ((double)microsec)) * 8 << std::endl;
     }
     else
     {
