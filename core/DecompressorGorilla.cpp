@@ -1,44 +1,40 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <sstream>
-#include <iostream>
-#include "../lib/Zigzag.hpp"
 #include "../lib/BitStream.cpp"
-#include "../lib/Window.cpp"
+#include "../lib/Zigzag.hpp"
 
-struct DecompressorLZXOR
+struct DecompressorGorilla
 {
+    std::vector<uint64_t> storedLeadingZeros;
+    std::vector<uint64_t> storedTrailingZeros;
     std::vector<double> storedVal;
 
     uint64_t storedTimestamp = 0;
     uint64_t storedDelta = 0;
-    uint64_t current_idx = 0;
-    
+
     bool endOfStream = false;
 
     BitStream bs_times;
-    std::vector<uint8_t> bt_values;
-    std::vector<Window> window;
-
+    BitStream bs_values;
     uint64_t ncols;
 
-    DecompressorLZXOR(BitStream &bs_ts, std::vector<uint8_t> &bt_val, uint64_t n)
+    DecompressorGorilla(BitStream const &bs_ts, BitStream const &bs_val, uint64_t n)
     {
         bs_times = bs_ts;
-        bt_values = bt_val;
+        bs_values = bs_val;
         ncols = n;
+        storedLeadingZeros = std::vector<uint64_t>(ncols, 0);
+        storedTrailingZeros = std::vector<uint64_t>(ncols, 0);
         storedVal = std::vector<double>(ncols, 0);
-        window = std::vector<Window>(ncols);
 
         storedTimestamp = bs_times.get(64);
 
         for (int i = 0; i < ncols; i++)
         {
-            uint64_t read = readBytes(8);
-            window[i].insert(read);
-            double p = (*(double *)&read);
-            storedVal[i] = p;
+            uint64_t read = bs_values.get(64);
+            double *p = (double *)&read;
+            storedVal[i] = *p;
         }
     }
 
@@ -94,7 +90,6 @@ struct DecompressorLZXOR
                 }
             }
             deltaDelta = zz::decode(deltaDelta);
-            // deltaDelta = (int)(deltaDelta);
         }
 
         storedDelta = storedDelta + deltaDelta;
@@ -103,52 +98,34 @@ struct DecompressorLZXOR
 
     void nextValue()
     {
-        uint64_t final_val;
-        uint64_t offset;
-        uint64_t info;
-        uint64_t trail_zeros_bytes;
-        uint64_t xor_bytes;
-        uint64_t xor_;
-        uint64_t head;
         for (int i = 0; i < ncols; i++)
         {
-            head = readBytes(1);
+            // Read value
+            // If 1 means that the value has not changed, hence no ops perfomed
+            if (bs_values.readBit())
+            {
+                // else -> same value as before
+                if (bs_values.readBit())
+                {
+                    // New leading and trailing zeros
+                    storedLeadingZeros[i] = bs_values.get(5);
 
-            if (head < 128)
-            {
-                final_val = window[i].get(head);
-            }
-            else if (head == 255)
-            {
-                final_val = readBytes(8);
-            }
-            else
-            {
-                offset = head & (~((UINT64_MAX << 7)));
-                info = readBytes(1);
-                trail_zeros_bytes = info >> 4;
-                xor_bytes = info & (~((UINT64_MAX << 4)));
-                xor_ = readBytes(xor_bytes) << (8 * trail_zeros_bytes);
-                final_val = xor_ ^ window[i].get(offset);
-            }
-            window[i].insert(final_val);
-            double p = (*(double *)&final_val);
-            storedVal[i] = p;
-        }
-    }
+                    uint64_t significantBits = bs_values.get(6);
+                    if (significantBits == 0)
+                    {
+                        significantBits = 64;
+                    }
+                    storedTrailingZeros[i] = 64 - significantBits - storedLeadingZeros[i];
+                }
+                uint64_t value = bs_values.get(64 - storedLeadingZeros[i] - storedTrailingZeros[i]);
+                value <<= storedTrailingZeros[i];
 
-    uint64_t readBytes(size_t len)
-    {
-        uint64_t val = 0;
-        for (int i = 0; i < len; i++)
-        {
-            val |= bt_values[current_idx];
-            current_idx++;
-            if (i != (len - 1))
-            {
-                val <<= 8;
+                uint64_t *a = (uint64_t *)&storedVal[i];
+                uint64_t *b = (uint64_t *)&value;
+                uint64_t xor_ = *a ^ *b;
+                double *p = (double *)&xor_;
+                storedVal[i] = *p;
             }
         }
-        return val;
     }
 };

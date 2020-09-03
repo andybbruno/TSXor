@@ -1,44 +1,40 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <sstream>
-#include <iostream>
+#include "fpc_utils/fpc.cpp"
 #include "../lib/Zigzag.hpp"
 #include "../lib/BitStream.cpp"
-#include "../lib/Window.cpp"
 
-struct DecompressorLZXOR
+struct DecompressorFPC
 {
+    std::vector<FPC> fpc;
+
     std::vector<double> storedVal;
 
     uint64_t storedTimestamp = 0;
     uint64_t storedDelta = 0;
-    uint64_t current_idx = 0;
-    
+
     bool endOfStream = false;
 
     BitStream bs_times;
-    std::vector<uint8_t> bt_values;
-    std::vector<Window> window;
-
+    BitStream bs_values;
     uint64_t ncols;
 
-    DecompressorLZXOR(BitStream &bs_ts, std::vector<uint8_t> &bt_val, uint64_t n)
+    DecompressorFPC(BitStream const &bs_ts, BitStream const &bs_val, uint64_t n)
     {
         bs_times = bs_ts;
-        bt_values = bt_val;
+        bs_values = bs_val;
         ncols = n;
         storedVal = std::vector<double>(ncols, 0);
-        window = std::vector<Window>(ncols);
+        fpc = std::vector<FPC>(ncols);
 
         storedTimestamp = bs_times.get(64);
 
         for (int i = 0; i < ncols; i++)
         {
-            uint64_t read = readBytes(8);
-            window[i].insert(read);
-            double p = (*(double *)&read);
-            storedVal[i] = p;
+            uint64_t read = bs_values.get(64);
+            double *p = (double *)&read;
+            storedVal[i] = *p;
         }
     }
 
@@ -94,7 +90,6 @@ struct DecompressorLZXOR
                 }
             }
             deltaDelta = zz::decode(deltaDelta);
-            // deltaDelta = (int)(deltaDelta);
         }
 
         storedDelta = storedDelta + deltaDelta;
@@ -103,52 +98,15 @@ struct DecompressorLZXOR
 
     void nextValue()
     {
-        uint64_t final_val;
-        uint64_t offset;
-        uint64_t info;
-        uint64_t trail_zeros_bytes;
-        uint64_t xor_bytes;
-        uint64_t xor_;
-        uint64_t head;
         for (int i = 0; i < ncols; i++)
         {
-            head = readBytes(1);
+            bool use_fcm = bs_values.get(1);
+            auto zeros = bs_values.get(3);
+            auto body = bs_values.get(64 - (8 * zeros));
 
-            if (head < 128)
-            {
-                final_val = window[i].get(head);
-            }
-            else if (head == 255)
-            {
-                final_val = readBytes(8);
-            }
-            else
-            {
-                offset = head & (~((UINT64_MAX << 7)));
-                info = readBytes(1);
-                trail_zeros_bytes = info >> 4;
-                xor_bytes = info & (~((UINT64_MAX << 4)));
-                xor_ = readBytes(xor_bytes) << (8 * trail_zeros_bytes);
-                final_val = xor_ ^ window[i].get(offset);
-            }
-            window[i].insert(final_val);
-            double p = (*(double *)&final_val);
-            storedVal[i] = p;
-        }
-    }
+            double dec = fpc[i].decode(use_fcm, body);
 
-    uint64_t readBytes(size_t len)
-    {
-        uint64_t val = 0;
-        for (int i = 0; i < len; i++)
-        {
-            val |= bt_values[current_idx];
-            current_idx++;
-            if (i != (len - 1))
-            {
-                val <<= 8;
-            }
+            storedVal[i] = dec;
         }
-        return val;
     }
 };
