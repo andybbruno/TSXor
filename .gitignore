@@ -46,3 +46,4 @@ test_readcsv.dSYM
 *.lzx
 *.fpc
 *.gor
+/test/ANS
