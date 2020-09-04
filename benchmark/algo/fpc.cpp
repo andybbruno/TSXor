@@ -3,8 +3,8 @@
 #include <chrono>
 #include <iostream>
 #include <numeric>
-#include "../../core/DecompressorFPC.cpp"
-#include "../../core/CompressorFPC.cpp"
+#include "core/DecompressorFPC.cpp"
+#include "core/CompressorFPC.cpp"
 #include "../../util/CSVReader.cpp"
 
 int numLines = 0;

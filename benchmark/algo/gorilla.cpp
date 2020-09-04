@@ -3,8 +3,8 @@
 #include <chrono>
 #include <iostream>
 #include <numeric>
-#include "../../core/DecompressorGorilla.cpp"
-#include "../../core/CompressorGorilla.cpp"
+#include "core/DecompressorGorilla.cpp"
+#include "core/CompressorGorilla.cpp"
 #include "../../util/CSVReader.cpp"
 
 int numLines = 0;
