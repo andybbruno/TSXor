@@ -1,5 +1,5 @@
-# LZ-XOR
-[Alpha Version] LZ-XOR: A Novel Time Series Compression Algorithm
+# TSXor
+[Alpha Version] TSXor: A Novel Time Series Compression Algorithm
 
 Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
 
@@ -44,22 +44,22 @@ To run a compression test of a `.bin` file, execute the following commands:
 
     ./compression.o path/to/MY_DATASET.bin
 
-This will produce a file called ``compressed_data.lzx``
+This will produce a file called ``compressed_data.tsx``
 
 ### Decompression
 
-To decompress the file ``compressed_data.lzx``, run the command:
+To decompress the file ``compressed_data.tsx``, run the command:
 
     ./decompression.o
 
 Benchmarks
 -----------------
-The following tables show the comparison between LZ-XOR with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan. The experiments were run on an Ubuntu 18.04 machine with Intel i7-7700 CPU @ 3.60GHz.
+The following tables show the comparison between TSXor with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan. The experiments were run on an Ubuntu 18.04 machine with Intel i7-7700 CPU @ 3.60GHz.
   
 
 ### Compression Speeds (MB/s)
 
-|                      |  FPC  | Gorilla | LZ-XOR |
+|                      |  FPC  | Gorilla | TSXor |
 |:--------------------:|:-----:|:-------:|:------:|
 |        AMPds2        | 339,28 | **703,72** | 66,59 |
 |       Bar Crawl      | 423,71 | **466,49** | 28,74 |
@@ -72,7 +72,7 @@ The following tables show the comparison between LZ-XOR with [Gorilla](https://w
 
 ### Decompression Speeds (MB/s)
 
-|                      |   FPC   | Gorilla |  LZ-XOR |
+|                      |   FPC   | Gorilla |  TSXor |
 |:--------------------:|:-------:|:-------:|:-------:|
 |        AMPds2        | 411,29 | 666,52 | **1173,65** |
 |       Bar Crawl      | 436,12 | 447,42 | **709,68**  |
@@ -85,7 +85,7 @@ The following tables show the comparison between LZ-XOR with [Gorilla](https://w
 
 ### Compression Ratios
 
-|                      |   FPC  | Gorilla | LZ-XOR |
+|                      |   FPC  | Gorilla | TSXor |
 |:--------------------:|:------:|:-------:|:------:|
 |        AMPds2        | 1,10x | 2,03x | **6,39x** |
 |       Bar Crawl      | 1,20x | 1,44x | **2,36x** |
