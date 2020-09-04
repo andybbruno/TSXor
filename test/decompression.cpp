@@ -9,7 +9,7 @@ int numLines = 0;
 
 int main(int argc, char *argv[])
 {
-    auto infile = std::ifstream("compressed_data.lzx", std::ios::out | std::ios::binary);
+    auto infile = std::ifstream("compressed_data.tsx", std::ios::out | std::ios::binary);
 
     uint64_t nlines;
     uint64_t ncols;

@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     std::cout << "Reduction size: \t" << ((double)original_size / compressed_size) << "x" << std::endl
               << std::endl;
 
-    auto outfile = std::ofstream("compressed_data.lzx", std::ios::out | std::ios::binary);
+    auto outfile = std::ofstream("compressed_data.tsx", std::ios::out | std::ios::binary);
 
     auto bits_strm = c.bstream.data;
     auto bits_strm_msize = c.bstream.m_size;
