@@ -1,8 +1,8 @@
 #include <vector>
 #include <filesystem>
 #include <numeric>
-#include "../core/DecompressorLZXOR.cpp"
-#include "../core/CompressorLZXOR.cpp"
+#include "../core/DecompressorTSXor.cpp"
+#include "../core/CompressorTSXor.cpp"
 #include "../util/CSVReader.cpp"
 
 int numLines = 0;
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     BitStream bits(in_bits, bitstream_m_size);
 
     auto start_dec = std::chrono::system_clock::now();
-    DecompressorLZXOR dm(bits, in_bytes, ncols);
+    DecompressorTSXor dm(bits, in_bytes, ncols);
 
     while (dm.hasNext()){}
 

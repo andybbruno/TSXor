@@ -8,7 +8,7 @@
 #include "../lib/Window.cpp"
 
 
-struct DecompressorLZXOR
+struct DecompressorTSXor
 {
     std::vector<Window> cache;
 
@@ -30,7 +30,7 @@ struct DecompressorLZXOR
     std::vector<uint8_t> bytes;
     uint64_t current_idx = 0;
 
-    DecompressorLZXOR(BitStream &input, std::vector<uint8_t> &bts, uint64_t n)
+    DecompressorTSXor(BitStream &input, std::vector<uint8_t> &bts, uint64_t n)
     {
         in = input;
         ncols = n;

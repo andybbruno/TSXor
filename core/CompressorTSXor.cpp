@@ -11,7 +11,7 @@
 #define DELTA_9_MASK 0x06 << 9;
 #define DELTA_12_MASK 0x0E << 12;
 
-struct CompressorLZXOR
+struct CompressorTSXor
 {
     uint countA = 0;
     uint countB = 0;
@@ -28,7 +28,7 @@ struct CompressorLZXOR
     BitStream bstream;
     std::vector<uint8_t> bytes;
 
-    CompressorLZXOR(uint64_t timestamp)
+    CompressorTSXor(uint64_t timestamp)
     {
         blockTimestamp = timestamp;
         addHeader(timestamp);

@@ -1,8 +1,8 @@
 #include <vector>
 #include <filesystem>
 #include <numeric>
-#include "../core/DecompressorLZXOR.cpp"
-#include "../core/CompressorLZXOR.cpp"
+#include "../core/DecompressorTSXor.cpp"
+#include "../core/CompressorTSXor.cpp"
 #include "../util/CSVReader.cpp"
 
 int numLines = 0;
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     }
 
     auto start_compr = std::chrono::system_clock::now();
-    CompressorLZXOR c(times[0]);
+    CompressorTSXor c(times[0]);
     for (int i = 0; i < nlines; i++)
     {
         c.addValue(times[i], values[i]);
