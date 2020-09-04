@@ -13,52 +13,63 @@
 
 struct CompressorLZXOR
 {
-    // uint countA = 0;
-    // uint countB = 0;
-    // uint countC = 0;
-    // uint countB_bytes = 0;
-
+    uint countA = 0;
+    uint countB = 0;
+    uint countC = 0;
+    uint countB_bytes = 0;
+    
+    uint8_t FIRST_DELTA_BITS = 32;
     long storedTimestamp = 0;
     long storedDelta = 0;
-    std::vector<double> storedValues;
-
-    BitStream bs_times;
-    std::vector<uint8_t> bt_values;
+    long blockTimestamp = 0;
+    
     std::vector<Window> window;
 
-    CompressorLZXOR(uint64_t timestamp, std::vector<double> const &values)
+    BitStream bstream;
+    std::vector<uint8_t> bytes;
+
+    CompressorLZXOR(uint64_t timestamp)
     {
-        window = std::vector<Window>(values.size());
+        blockTimestamp = timestamp;
+        addHeader(timestamp);
+    }
 
-        bs_times.append(timestamp, 64);
+    void addHeader(uint64_t timestamp)
+    {
+        bstream.append(timestamp, 64);
+    }
 
+    void addValue(uint64_t timestamp, std::vector<double> const &vals)
+    {
+        if (storedTimestamp == 0)
+        {
+            window = std::vector<Window>(vals.size());
+            writeFirst(timestamp, vals);
+        }
+        else
+        {
+            compressTimestamp(timestamp);
+            compressValue(vals);
+        }
+    }
+
+    void writeFirst(uint64_t timestamp, std::vector<double> const &values)
+    {
+        storedDelta = timestamp - blockTimestamp;
+        storedTimestamp = timestamp;
+
+        bstream.append(storedDelta, FIRST_DELTA_BITS);
         for (int i = 0; i < values.size(); i++)
         {
             uint64_t x = *((uint64_t *)&(values[i]));
             append64(x);
             window[i].insert(x);
         }
-
-        storedTimestamp = timestamp;
-        storedValues = values;
-    }
-
-    void addValue(uint64_t timestamp, std::vector<double> const &vals)
-    {
-        compressTimestamp(timestamp);
-        compressValue(vals);
     }
 
     void close()
     {
-        bs_times.append(0x0F, 4);
-        bs_times.append(UINT32_MAX, 32);
-        //padding
-        bs_times.append(0, 64);
-        bs_times.close();
-
-        //padding
-        append64(0);
+        bstream.close();
     }
 
     void compressTimestamp(long timestamp)
@@ -69,7 +80,7 @@ struct CompressorLZXOR
 
         if (deltaD == 0)
         {
-            bs_times.push_back(0);
+            bstream.push_back(0);
         }
         else
         {
@@ -87,25 +98,26 @@ struct CompressorLZXOR
             case 7:
                 //DELTA_7_MASK adds '10' to deltaD
                 deltaD |= DELTA_7_MASK;
-                bs_times.append(deltaD, 9);
+                bstream.append(deltaD, 9);
                 break;
             case 8:
             case 9:
                 //DELTA_9_MASK adds '110' to deltaD
                 deltaD |= DELTA_9_MASK;
-                bs_times.append(deltaD, 12);
+                bstream.append(deltaD, 12);
                 break;
             case 10:
             case 11:
             case 12:
                 //DELTA_12_MASK adds '1110' to deltaD
                 deltaD |= DELTA_12_MASK;
-                bs_times.append(deltaD, 16);
+                bstream.append(deltaD, 16);
                 break;
             default:
                 // Append '1111'
-                bs_times.append(0x0F, 4);
-                bs_times.append(deltaD, 32);
+                bstream.append(0x0F, 4);
+                bstream.append(deltaD, 32);
+                // bstream.append(deltaD, 64);
                 break;
             }
         }
@@ -126,7 +138,7 @@ struct CompressorLZXOR
                 uint8_t *bytes = (uint8_t *)&offset;
                 append8(bytes[0]);
 
-                // countA++;
+                countA++;
             }
             else
             {
@@ -158,14 +170,15 @@ struct CompressorLZXOR
                         append8(xor_bytes[i]);
                     }
 
-                    // countB++;
-                    // countB_bytes += (2 + xor_len_bytes);
+                    countB++;
+                    countB_bytes += (2 + xor_len_bytes);
                 }
                 else
                 {
                     append8((uint8_t)255);
                     append64(val);
-                    // countC++;
+
+                    countC++;
                 }
             }
         }
@@ -177,17 +190,18 @@ struct CompressorLZXOR
         }
     }
 
-    void append64(uint64_t x)
+    inline void append64(uint64_t x)
     {
         uint8_t *b = (uint8_t *)&x;
         for (int i = 7; i >= 0; i--)
         {
-            bt_values.push_back(b[i]);
+            bytes.push_back(b[i]);
         }
     }
 
-    void append8(uint8_t x)
+    inline void append8(uint8_t x)
     {
-        bt_values.push_back(x);
+        bytes.push_back(x);
     }
+    
 };
