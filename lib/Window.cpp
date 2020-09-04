@@ -18,7 +18,7 @@ public:
         tmp = std::vector<uint64_t>(dim, 0);
     }
 
-    void insert(uint64_t val)
+    inline void insert(uint64_t val)
     {
         //Remove tail
         buffer.pop_back();
@@ -27,29 +27,29 @@ public:
         buffer.push_front(val);
     }
 
-    bool contains(uint64_t val)
+    inline bool contains(uint64_t val)
     {
         return std::find(buffer.begin(), buffer.end(), val) != buffer.end();
     }
 
-    int getIndexOf(uint64_t val)
+    inline int getIndexOf(uint64_t val)
     {
         return std::distance(buffer.begin(), std::find(buffer.begin(), buffer.end(), val));
     }
 
-    uint64_t get(int offset)
+    inline uint64_t get(int offset)
     {
         return buffer[offset];
     }
 
-    uint64_t getLast()
+    inline uint64_t getLast()
     {
         return buffer.front();
     }
 
-    uint64_t getCandidate(uint64_t val)
+    inline uint64_t getCandidate(uint64_t val)
     {
-
+        
         for (int i = 0; i < WINDOW_SIZE; i++)
         {
             tmp[i] = val ^ buffer[i];
