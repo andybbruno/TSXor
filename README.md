@@ -12,7 +12,7 @@ Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
 
 Builiding the code
 -----------------
-The code has been tested on MacOS 10.15.4 using `clang` version 11.0.3. 
+The code has been tested both on Linux and MacOS. 
 
 No dependencies are needed.
 
@@ -54,7 +54,8 @@ To decompress the file ``compressed_data.lzx``, run the command:
 
 Benchmarks
 -----------------
-The following tables show the comparison between LZ-XOR with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan.
+The following tables show the comparison between LZ-XOR with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan. The experiments were run on an Ubuntu 18.04 machine with Intel i7-7700 CPU @ 3.60GHz.
+  
 
 ### Compression Speeds (MB/s)
 
