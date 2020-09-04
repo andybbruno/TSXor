@@ -1,5 +1,5 @@
-# LZ-XOR
-[Alpha Version] LZ-XOR: A Novel Time Series Compression Algorithm
+# TSXor
+[Alpha Version] TSXor: A Novel Time Series Compression Algorithm
 
 Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
 
@@ -12,7 +12,7 @@ Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
 
 Builiding the code
 -----------------
-The code has been tested on MacOS 10.15.4 using `clang` version 11.0.3. 
+The code has been tested both on Linux and MacOS. 
 
 No dependencies are needed.
 
@@ -44,56 +44,56 @@ To run a compression test of a `.bin` file, execute the following commands:
 
     ./compression.o path/to/MY_DATASET.bin
 
-This will produce a file called ``compressed_data.lzx``
+This will produce a file called ``compressed_data.tsx``
 
 ### Decompression
 
-To decompress the file ``compressed_data.lzx``, run the command:
+To decompress the file ``compressed_data.tsx``, run the command:
 
     ./decompression.o
 
 Benchmarks
 -----------------
-The following tables show the comparison between LZ-XOR with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan.
+The following tables show the comparison between TSXor with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan. The experiments were run on an Ubuntu 18.04 machine with Intel i7-7700 CPU @ 3.60GHz.
+  
 
 ### Compression Speeds (MB/s)
 
-|                      |  FPC  | Gorilla | LZ-XOR |
+|                      |  FPC  | Gorilla | TSXor |
 |:--------------------:|:-----:|:-------:|:------:|
-|        AMPds2        | 126,9 |  **381,8**  |  77,4  |
-|       Bar Crawl      | 232,4 |  **325,8**  |  35,2  |
-|      Max-Planck      | 156,1 |  **484,8**  |  64,2  |
-|        Kinect        |  82,2 |  **399,8**  |  23,5  |
-|      Oxford-Man      |  63,7 |  **348,5**  |  19,8  |
-|         PAMAP        |  76,6 |  **351,5**  |  56,0  |
-| UCI Gas Sensor Array | 112,9 |  **349,4**  |  28,6  |
+|        AMPds2        | 339,28 | **703,72** | 66,59 |
+|       Bar Crawl      | 423,71 | **466,49** | 28,74 |
+|      Max-Planck      | 313,40 | **870,58** | 51,74 |
+|        Kinect        | 166,28 | **696,10** | 17,14 |
+|      Oxford-Man      | 170,27 | **630,33** | 15,43 |
+|         PAMAP        | 181,59 | **521,41** | 45,05 |
+| UCI Gas Sensor Array | 286,94 | **654,32** | 21,93 |
 
 
 ### Decompression Speeds (MB/s)
 
-|                      |   FPC   | Gorilla |  LZ-XOR |
+|                      |   FPC   | Gorilla |  TSXor |
 |:--------------------:|:-------:|:-------:|:-------:|
-|        AMPds2        |  210,3  |  499,1  | **1.068,1** |
-|       Bar Crawl      |  293,0  |  352,1  |  **572,9**  |
-|      Max-Planck      |  229,7  |  646,3  |  **870,5**  |
-|        Kinect        |  150,2  |  502,6  |  **527,3** |
-|      Oxford-Man      |  108,7  |  436,6  |  **534,0**  |
-|         PAMAP        | **1.635,4** |  391,7  |  841,8  |
-| UCI Gas Sensor Array |  117,8  |  443,9  |  **604,2**  |
+|        AMPds2        | 411,29 | 666,52 | **1173,65** |
+|       Bar Crawl      | 436,12 | 447,42 | **709,68**  |
+|      Max-Planck      | 355,30 | 858,68 | **1057,00** |
+|        Kinect        | 287,18 | 635,74 | **665,47**  |
+|      Oxford-Man      | 221,80 | 573,67 | **604,54**  |
+|         PAMAP        | 223,86 | 487,41 | **949,28**  |
+| UCI Gas Sensor Array | 454,91 | 578,41 | **642,40**  |
 
 
 ### Compression Ratios
 
-|                      |   FPC  | Gorilla | LZ-XOR |
+|                      |   FPC  | Gorilla | TSXor |
 |:--------------------:|:------:|:-------:|:------:|
-|        AMPds2        | 1.375x |  2.034x | **6.391x** |
-|       Bar Crawl      | 1.461x |  1.443x | **2.358x** |
-|      Max-Planck      | 2.707x |  2.968x | **4.837x** |
-|        Kinect        | **1.478x** |  1.408x | 1.367x |
-|      Oxford-Man      | 1.233x |  1.275x | **1.299x** |
-|         PAMAP        | 1.364x |  1.380x | **4.848x** |
-| UCI Gas Sensor Array | 1.338x |  1.228x | **3.499x** |
-
+|        AMPds2        | 1,10x | 2,03x | **6,39x** |
+|       Bar Crawl      | 1,20x | 1,44x | **2,36x** |
+|      Max-Planck      | 1,06x | 2,97x | **4,84x** |
+|        Kinect        | 1,09x | **1,41x** | 1,37x |
+|      Oxford-Man      | 1,06x | 1,28x | **1,30x** |
+|         PAMAP        | 1,01x | 1,38x | **4,85x** |
+| UCI Gas Sensor Array | 1,19x | 1,23x | **3,50x** |
 
 Notes
 -----------------
