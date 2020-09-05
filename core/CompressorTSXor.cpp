@@ -3,62 +3,19 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "../lib/BitStream.cpp"
 #include "../lib/Window.cpp"
-#include "../lib/Zigzag.hpp"
-
-#define DELTA_7_MASK 0x02 << 7;
-#define DELTA_9_MASK 0x06 << 9;
-#define DELTA_12_MASK 0x0E << 12;
 
 struct CompressorTSXor
 {
-    uint countA = 0;
-    uint countB = 0;
-    uint countC = 0;
-    uint countB_bytes = 0;
-    
-    uint8_t FIRST_DELTA_BITS = 32;
-    long storedTimestamp = 0;
-    long storedDelta = 0;
-    long blockTimestamp = 0;
-    
-    std::vector<Window> window;
-
-    BitStream bstream;
+    std::vector<double> storedValues;
     std::vector<uint8_t> bytes;
+    std::vector<Window> window;
+    long nlines = 0;
 
-    CompressorTSXor(uint64_t timestamp)
+    CompressorTSXor(std::vector<double> const &values)
     {
-        blockTimestamp = timestamp;
-        addHeader(timestamp);
-    }
+        window = std::vector<Window>(values.size());
 
-    void addHeader(uint64_t timestamp)
-    {
-        bstream.append(timestamp, 64);
-    }
-
-    void addValue(uint64_t timestamp, std::vector<double> const &vals)
-    {
-        if (storedTimestamp == 0)
-        {
-            window = std::vector<Window>(vals.size());
-            writeFirst(timestamp, vals);
-        }
-        else
-        {
-            compressTimestamp(timestamp);
-            compressValue(vals);
-        }
-    }
-
-    void writeFirst(uint64_t timestamp, std::vector<double> const &values)
-    {
-        storedDelta = timestamp - blockTimestamp;
-        storedTimestamp = timestamp;
-
-        bstream.append(storedDelta, FIRST_DELTA_BITS);
         for (int i = 0; i < values.size(); i++)
         {
             uint64_t x = *((uint64_t *)&(values[i]));
@@ -67,63 +24,15 @@ struct CompressorTSXor
         }
     }
 
-    void close()
+    void addValue(std::vector<double> const &vals)
     {
-        bstream.close();
+        compressValue(vals);
+        nlines++;
     }
 
-    void compressTimestamp(long timestamp)
+    void close()
     {
-        // a) Calculate the delta of delta
-        int64_t newDelta = (timestamp - storedTimestamp);
-        int64_t deltaD = newDelta - storedDelta;
-
-        if (deltaD == 0)
-        {
-            bstream.push_back(0);
-        }
-        else
-        {
-            deltaD = zz::encode(deltaD);
-            auto length = 64 - __builtin_clzll(deltaD);
-
-            switch (length)
-            {
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-                //DELTA_7_MASK adds '10' to deltaD
-                deltaD |= DELTA_7_MASK;
-                bstream.append(deltaD, 9);
-                break;
-            case 8:
-            case 9:
-                //DELTA_9_MASK adds '110' to deltaD
-                deltaD |= DELTA_9_MASK;
-                bstream.append(deltaD, 12);
-                break;
-            case 10:
-            case 11:
-            case 12:
-                //DELTA_12_MASK adds '1110' to deltaD
-                deltaD |= DELTA_12_MASK;
-                bstream.append(deltaD, 16);
-                break;
-            default:
-                // Append '1111'
-                bstream.append(0x0F, 4);
-                bstream.append(deltaD, 32);
-                // bstream.append(deltaD, 64);
-                break;
-            }
-        }
-
-        storedDelta = newDelta;
-        storedTimestamp = timestamp;
+        append64(0);
     }
 
     void compressValue(std::vector<double> const &values)
@@ -137,8 +46,6 @@ struct CompressorTSXor
                 auto offset = window[i].getIndexOf(val);
                 uint8_t *bytes = (uint8_t *)&offset;
                 append8(bytes[0]);
-
-                countA++;
             }
             else
             {
@@ -169,16 +76,11 @@ struct CompressorTSXor
                     {
                         append8(xor_bytes[i]);
                     }
-
-                    countB++;
-                    countB_bytes += (2 + xor_len_bytes);
                 }
                 else
                 {
                     append8((uint8_t)255);
                     append64(val);
-
-                    countC++;
                 }
             }
         }
@@ -190,7 +92,7 @@ struct CompressorTSXor
         }
     }
 
-    inline void append64(uint64_t x)
+    void append64(uint64_t x)
     {
         uint8_t *b = (uint8_t *)&x;
         for (int i = 7; i >= 0; i--)
@@ -199,9 +101,8 @@ struct CompressorTSXor
         }
     }
 
-    inline void append8(uint8_t x)
+    void append8(uint8_t x)
     {
         bytes.push_back(x);
     }
-    
 };

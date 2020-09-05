@@ -6,6 +6,8 @@
 int main(int argc, char *argv[])
 {
     std::string filename(argv[1]);
+    int skip_timestamp = argc > 2 ? 1 : 0;
+
     CSVReader reader(filename);
 
     uint64_t nlines = 0;
@@ -17,7 +19,6 @@ int main(int argc, char *argv[])
     }
     uint64_t ncols = lines[0].size();
 
-    
     std::string rawname = filename.substr(0, filename.find_last_of("."));
     filename = rawname + std::string(".bin");
 
@@ -31,7 +32,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < nlines; i++)
     {
-        for (int j = 0; j < ncols; j++)
+        for (int j = skip_timestamp; j < ncols; j++)
         {
             myfile.write((char *)&lines[i][j], sizeof(double));
         }
