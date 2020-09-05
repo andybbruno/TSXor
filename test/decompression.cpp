@@ -21,6 +21,12 @@ int main(int argc, char *argv[])
     infile.read((char *)&ncols, sizeof(uint64_t));
     infile.read((char *)&byte_size, sizeof(uint64_t));
 
+
+    std::cout << nlines << std::endl;
+    std::cout << ncols << std::endl;
+    std::cout << byte_size << std::endl;
+
+
     std::vector<uint8_t> bytes(byte_size);
 
     infile.read(reinterpret_cast<char *>(&bytes[0]),

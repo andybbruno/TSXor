@@ -3,7 +3,8 @@ FLAGS 		= -O3 -std=c++17
 TESTFOLDER  = test/
 UTILFOLDER  = util/
 
-TARGETS = full compression decompression csv_to_bin
+# TARGETS = full compression decompression csv_to_bin
+TARGETS = compression decompression csv_to_bin
 
 all		: $(TARGETS)
 

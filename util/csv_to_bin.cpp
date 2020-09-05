@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     std::string filename(argv[1]);
-    int skip_timestamp = argc > 2 ? 1 : 0;
+    int skip_timestamp = argc > 2;
 
     CSVReader reader(filename);
 
@@ -20,6 +20,10 @@ int main(int argc, char *argv[])
     uint64_t ncols = lines[0].size();
 
     std::string rawname = filename.substr(0, filename.find_last_of("."));
+    if (skip_timestamp != 0)
+    {
+        rawname += "no_ts";
+    }
     filename = rawname + std::string(".bin");
 
     auto myfile = std::ofstream(filename, std::ios::out | std::ios::binary);

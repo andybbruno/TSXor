@@ -23,6 +23,14 @@ struct DecompressorTSXor
         bytes = bts;
         window = std::vector<Window>(ncols);
         storedVal = std::vector<double>(ncols, 0);
+
+        for (int i = 0; i < ncols; i++)
+        {
+            uint64_t read = readBytes(8);
+            window[i].insert(read);
+            double p = (*(double *)&read);
+            storedVal[i] = p;
+        }
     }
 
     bool hasNext()
