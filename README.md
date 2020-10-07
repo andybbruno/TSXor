@@ -30,7 +30,7 @@ You need first to convert the `.csv` into a `.bin` file using the `csv_to_bin` u
 
     ./csv_to_bin.o path/to/MY_DATASET.csv
 
-Please note: the first column will be interpret as the timestamp, the rest will be interpret as values.
+Please note: the first column will be interpreted as the timestamp, the rest will be interpreted as values.
 
 
 
