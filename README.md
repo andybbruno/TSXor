@@ -54,7 +54,7 @@ To decompress the file ``compressed_data.tsx``, run the command:
 
 Benchmarks
 -----------------
-The following tables show the comparison between TSXor with [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan. The experiments were run on an Ubuntu 18.04 machine with Intel i7-7700 CPU @ 3.60GHz.
+The following tables show the comparison between TSXor with respect to [Gorilla](https://www.vldb.org/pvldb/vol8/p1816-teller.pdf) by Facebook and [FPC](https://ieeexplore.ieee.org/document/4589203) by Burtscher and Ratanaworabhan. The experiments were run on an Ubuntu 18.04 machine with Intel i7-7700 CPU @ 3.60GHz.
 
 ### Compression Speeds (MB/s)
 
