@@ -84,8 +84,15 @@ struct BitStream
         {
             t_bits = *curr_bucket;
             data.pop_front();
-            curr_bucket = &data.front();
-            m_used_slots = m_size < 64 ? m_size : 64;
+            if (data.size() > 0)
+            {
+                curr_bucket = &data.front();
+                m_used_slots = m_size < 64 ? m_size : 64;
+            }
+            else
+            {
+                m_used_slots = 0;
+            }
         }
         else if (len < m_used_slots)
         {
@@ -100,10 +107,20 @@ struct BitStream
             data.pop_front();
             curr_bucket = &data.front();
             t_bits <<= len - m_used_slots;
-            t_bits ^= (*curr_bucket >> (64 - len + m_used_slots));
-            auto mask = UINT64_MAX << (64 - len + m_used_slots);
-            *curr_bucket &= (~mask);
-            m_used_slots = 64 - len + m_used_slots;
+            if (data.size() > 1)
+            {
+                t_bits ^= (*curr_bucket >> (64 - len + m_used_slots));
+                auto mask = UINT64_MAX << (64 - len + m_used_slots);
+                *curr_bucket &= (~mask);
+                m_used_slots = 64 - len + m_used_slots;
+            }
+            else
+            {
+                t_bits ^= (*curr_bucket >> (m_size - len));
+                auto mask = UINT64_MAX << (m_size - len);
+                *curr_bucket &= (~mask);
+                m_used_slots = m_size - len;
+            }
         }
 
         m_size -= len;
