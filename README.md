@@ -1,14 +1,56 @@
-# TSXor
-[Alpha Version] TSXor: A Novel Time Series Compression Algorithm
+# TSXor: A Simple Time Series Compression Algorithm
 
-Fully developed at ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
+Developed @ ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
 
-##### Table of contents
+
+
+# Code
+
+* [Introduction](#introduction)
+* [How it works](#how_it_works)
 * [Building the code](#building-the-code)
 * [Input data format](#input-data-format)
-* [Tests](#tests)
+* [Run](#run)
 * [Benchmarks](#benchmarks)
+* [Authors](#authors)
 * [Notes](#notes)
+
+
+Introduction
+-----------------
+TSXor, a simple yet effective encoder/decoder for time series that achieves high compression ratios and fast decompression speed. TSXor exploits the redundancy/similarity between close-in-time values through a window that acts as a cache.
+
+How it works
+-----------------
+### Window
+TSXor compares each _v<sub>n</sub>_ value with its preceding _W ≤ 127_ values, logically corresponding to the values seen in the time range _[t<sub>n−W</sub> , t<sub>n−1</sub>]_. The goal is to compress _v<sub>n</sub>_ relative to this “window” containing the previous _W_ values. We distinguish between 3 cases, namely **Reference**, **XOR**, and **Exception**.
+
+<p align="center">
+    <img src="./img/win.gif" width="70%"/>
+</p>
+
+### Reference
+If _v<sub>n</sub>_ is equal to a value in the window, just output its position _p_ in the window. Since the window contains at most 127 values, 1 byte suffices to write the position with the most significant bit always equal to 0.
+
+<p align="center">
+    <img src="./img/ref.png" width="70%"/>
+</p>
+
+If the window does not contain _v<sub>n</sub>_, then we search for the value _u_ in the window such that _x = vn_ ⨁ _u_ has the largest number of leading (LZ) and trailing (TZ) zeros bytes. Let _p_ be the position of _u_ in the window. We first write _p + 128_ using 1 byte. In this case the most significant bit will always be 1 because of sum, which allows us to distinguish this case from the **Reference** case.
+
+### XOR
+If _LZ +TZ ≥ 2_, we output a byte where 4 bits are dedicated to TZ and the other 4 bits to the length (in bytes) of the segment of x between the leading and trailing zero bytes. We then write such middle bytes.
+
+<p align="center">
+    <img src="./img/xor.png" width="70%"/>
+</p>
+
+### Exception
+We output an exception code, i.e., the value 255 using 1 byte, followed by the plain double-precision representation of _v<sub>n</sub>_ using 8 bytes.
+
+<p align="center">
+    <img src="./img/exc.png" width="70%"/>
+</p>
 
 Builiding the code
 -----------------
@@ -34,7 +76,7 @@ Please note: the first column will be interpreted as the timestamp, the rest wil
 
 
 
-Tests
+Run
 -----------------
 ### Compression
 
@@ -93,7 +135,16 @@ The following tables show the comparison between TSXor with respect to [Gorilla]
 |         PAMAP        | 1,01x | 1,38x | **4,85x** |
 | UCI Gas Sensor Array | 1,19x | 1,23x | **3,50x** |
 
+Authors
+-----------------
+* [Andrea Bruno](https://github.com/andybbruno)
+* [Franco Maria Nardini](http://hpc.isti.cnr.it/~nardini/)
+* [Giulio Ermanno Pibiri](http://pages.di.unipi.it/pibiri/)
+* [Roberto Trani](https://github.com/roberto-trani)
+* [Rossano Venturini](http://pages.di.unipi.it/rossano/)
+
 
 Notes
 -----------------
-This is a preliminary version. Further details will be published in the next weeks.
+This is a beta version. Use it at your own risk.
+
