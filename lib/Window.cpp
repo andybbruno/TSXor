@@ -58,7 +58,7 @@ public:
         }*/
 
         __m512i vals = _mm512_set_epi64(val, val, val, val, val, val, val, val); 
-        for(int i = 0; i< WINDOW_SIZE / VECTOR_WIDTH; i+= VECTOR_WIDTH)
+        for(int i = 0; i< WINDOW_SIZE; i+= VECTOR_WIDTH)
         {
             
             __m512i buf_values = _mm512_load_epi64(&buffer[i]); 
