@@ -2,8 +2,7 @@
 
 Developed @ ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
 
-Full paper [here](https://rossanoventurini.github.io/papers/SPIRE21.pdf)
-
+Full paper [here](https://jermp.github.io/assets/pdf/papers/SPIRE2021.pdf)
 
 # Code
 
