@@ -1,5 +1,5 @@
 CXX 		= g++ 
-FLAGS 		= -O3 -std=c++17
+FLAGS 		= -O3 -std=c++17 -march=skylake-avx512
 TESTFOLDER  = test/
 UTILFOLDER  = util/
 
