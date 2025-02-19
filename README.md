@@ -4,6 +4,8 @@ Developed @ ISTI CNR - [HPC Lab](http://hpc.isti.cnr.it) (Pisa)
 
 Full paper [here](https://jermp.github.io/assets/pdf/papers/SPIRE2021.pdf)
 
+Slides [here](https://github.com/andybbruno/TSXor/blob/16899d15f54176c3a15babe138d795a7c4633877/slides.pdf)
+
 # Code
 
 * [Introduction](#introduction)
